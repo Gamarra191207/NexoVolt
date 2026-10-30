@@ -32,7 +32,18 @@ npm run tauri dev
 3. Corriente eléctrica y ley de Ohm
 4. Fuerza y campo magnético
 
-El módulo 1 incluye un visualizador de cargas puntuales, una calculadora de potencial y un simulador de trayectorias. El módulo 2 cuenta con una simulación 3D cuantitativa de capacitores de placas paralelas y dieléctricos, incluyendo el cálculo en vivo de la energía almacenada. Los módulos 3 y 4 siguen como prototipos; sus resultados deben conectarse a modelos físicos validados antes de usarlos como herramienta educativa.
+Las cuatro unidades funcionan como espacios de experimentación interactivos. La interfaz mantiene una respuesta inmediata para controles y animaciones, mientras que los cálculos verificables también están expuestos como comandos del backend Rust de Tauri. Durante el desarrollo web, el puente conserva un motor TypeScript equivalente para poder ejecutar la interfaz sin el contenedor de escritorio.
+
+## Backend físico por unidades
+
+| Unidad | Contratos Tauri | Alcance |
+| --- | --- | --- |
+| 1 | `electric_field_at`, `electric_potential_at` | Campo y potencial de hasta diez cargas puntuales. |
+| 2 | `parallel_plate_capacitor`, `capacitor_energy` | Capacitancia, carga, campo, energía y densidad de energía. |
+| 3 | `solve_resistor_circuit`, `solve_ohms_law` | Circuitos en serie, paralelo y mixtos; corriente, voltaje y potencia. |
+| 4 | `magnetic_field_from_current`, `lorentz_force` | Campo de conductores y fuerza de Lorentz vectorial. |
+
+Los contratos, unidades de medida, supuestos y validaciones están descritos en [docs/arquitectura-backend.md](docs/arquitectura-backend.md).
 
 ### Módulo 1: campo eléctrico y potencial
 

@@ -1,22 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Activity, ArrowLeft, ArrowRight, Atom, BatteryCharging,
-  Compass, Magnet, Maximize2, Minimize2, Moon, Sun, Zap,
+  ArrowLeft, ArrowRight, Atom, Compass,
+  Maximize2, Minimize2, Moon, Sun,
 } from 'lucide-react'
 import ElectricFieldLab from './components/ElectricFieldLab'
 import CapacitorLab from './components/CapacitorLab'
 import CircuitLab from './components/CircuitLab'
 import MagneticLab from './components/MagneticLab'
 import EngineStatus from './components/EngineStatus'
-
-type ModuleId = 'electric-field' | 'capacitors' | 'current' | 'magnetism'
-
-const modules = [
-  { id: 'electric-field' as const, number: '01', title: 'Campo eléctrico y potencial', short: 'Campo eléctrico', description: 'Visualiza cómo las cargas modifican el espacio a su alrededor.', icon: Zap, color: 'blue', topic: 'Electrostática', formula: 'E⃗ = kΣqᵢr̂ᵢ/rᵢ² · V = kΣqᵢ/rᵢ' },
-  { id: 'capacitors' as const, number: '02', title: 'Capacitores y dieléctricos', short: 'Capacitores', description: 'Explora placas en 3D y calcula la energía almacenada.', icon: BatteryCharging, color: 'violet', topic: 'Capacitancia', formula: 'C = ε · A / d' },
-  { id: 'current' as const, number: '03', title: 'Corriente eléctrica y ley de Ohm', short: 'Corriente eléctrica', description: 'Relaciona voltaje, resistencia y corriente en un circuito sencillo.', icon: Activity, color: 'orange', topic: 'Circuitos', formula: 'V = I · R' },
-  { id: 'magnetism' as const, number: '04', title: 'Fuerza y campo magnético', short: 'Magnetismo', description: 'Sigue la dirección del campo y la fuerza sobre cargas en movimiento.', icon: Magnet, color: 'green', topic: 'Magnetismo', formula: 'F⃗ = q(E⃗ + v⃗ × B⃗)' },
-]
+import { modules, type ModuleId } from './data/unitManifest'
+import './unit-structure.css'
 
 function App() {
   const [active, setActive] = useState<ModuleId | null>(null)
@@ -56,7 +49,7 @@ function App() {
 
   return <div className="app-shell" data-theme={darkMode ? 'dark' : 'light'}>
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark"><Atom size={19} strokeWidth={1.8} /></div><div><strong>Laboratorio <span>EM</span></strong><small>SIMULADOR DE FÍSICA</small></div></div>
+      <div className="brand"><div className="brand-mark"><Atom size={19} strokeWidth={1.8} /></div><div><strong>Nexo<span>Volt</span></strong><small>LABORATORIO UNIVERSITARIO</small></div></div>
       <button className={`nav-link ${active === null ? 'selected' : ''}`} onClick={() => setActive(null)}><Compass size={17} />Inicio <span className="nav-dot" /></button>
       <div className="side-label modules-label">MÓDULOS</div>
       <nav className="module-nav">{modules.map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => openModule(item.id)} className={`nav-link ${active === item.id ? 'selected' : ''}`}><Icon size={17} /><span>{item.short}</span></button> })}</nav>
@@ -75,8 +68,9 @@ function App() {
           </section>
         </div>
       </section> : <section className="home-page">
-        <div className="section-header"><div><div className="eyebrow muted-eyebrow">LABORATORIO DE ELECTROMAGNETISMO</div><h1>Simuladores</h1></div><span className="module-count">04 MÓDULOS</span></div>
-        <div className="module-grid">{modules.map((item) => { const Icon = item.icon; return <button key={item.id} className={`module-card ${item.color}`} onClick={() => openModule(item.id)}><div className="module-card-top"><div className="module-icon"><Icon size={19} strokeWidth={1.8} /></div><span className="module-number">{item.number}</span></div><div className="module-card-body"><span className="module-topic">{item.topic}</span><h3>{item.title}</h3><p>{item.description}</p></div><div className="module-card-bottom"><span>Explorar módulo</span><span className="card-arrow"><ArrowRight size={15} /></span></div><div className="card-accent" /></button> })}</div>
+        <section className="lab-overview" aria-labelledby="lab-title"><div className="lab-overview-copy"><div className="eyebrow muted-eyebrow">CENTRO DE EXPERIMENTOS DE ELECTROMAGNETISMO</div><h1 id="lab-title">Investiga, modifica variables y contrasta modelos físicos</h1><p>Cada unidad combina controles experimentales, visualización dinámica y resultados calculados por el motor físico. El laboratorio está pensado para explorar relaciones, formular hipótesis y repetir escenarios.</p></div><div className="lab-overview-stats" aria-label="Resumen del laboratorio"><div><strong>04</strong><span>Unidades</span></div><div><strong>12</strong><span>Experiencias</span></div><div><strong>15</strong><span>Pruebas físicas</span></div><div><strong>Rust</strong><span>Motor Tauri</span></div></div></section>
+        <div className="section-header unit-section-title"><div><div className="eyebrow muted-eyebrow">ESTRUCTURA POR UNIDADES</div><h1>Laboratorios disponibles</h1><p>Selecciona una unidad para abrir su espacio de experimentación.</p></div><span className="module-count">04 UNIDADES</span></div>
+        <div className="module-grid">{modules.map((item) => { const Icon = item.icon; return <button key={item.id} className={`module-card ${item.color}`} onClick={() => openModule(item.id)}><div className="module-card-top"><div className="module-icon"><Icon size={19} strokeWidth={1.8} /></div><span className="module-number">UNIDAD {item.number}</span></div><div className="module-card-body"><span className="module-topic">{item.topic}</span><h3>{item.title}</h3><p>{item.description}</p><div className="module-experiences" aria-label={`Experiencias de ${item.title}`}>{item.experiences.map((experience) => <span key={experience}>{experience}</span>)}</div></div><div className="module-card-bottom"><span>Explorar unidad</span><span className="module-engine-label">Backend validado</span><span className="card-arrow"><ArrowRight size={15} /></span></div><div className="card-accent" /></button> })}</div>
       </section>}
     </main>
   </div>
