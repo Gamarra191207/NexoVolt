@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+
+# Tauri and Rust build output
+src-tauri/target/
+
+# Local review and editor artifacts
+.codex-doc-review/
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
