@@ -8,6 +8,8 @@ pub fn run() {
             physics::electrostatics::electric_potential_at,
             physics::capacitors::parallel_plate_capacitor,
             physics::capacitors::capacitor_energy,
+            physics::circuits::solve_resistor_circuit,
+            physics::circuits::solve_ohms_law,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Laboratorio EM");
