@@ -10,6 +10,8 @@ pub fn run() {
             physics::capacitors::capacitor_energy,
             physics::circuits::solve_resistor_circuit,
             physics::circuits::solve_ohms_law,
+            physics::magnetism::magnetic_field_from_current,
+            physics::magnetism::lorentz_force,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Laboratorio EM");
