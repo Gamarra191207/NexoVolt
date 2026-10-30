@@ -7,6 +7,7 @@ import ElectricFieldLab from './components/ElectricFieldLab'
 import CapacitorLab from './components/CapacitorLab'
 import CircuitLab from './components/CircuitLab'
 import MagneticLab from './components/MagneticLab'
+import EngineStatus from './components/EngineStatus'
 
 type ModuleId = 'electric-field' | 'capacitors' | 'current' | 'magnetism'
 
@@ -63,7 +64,7 @@ function App() {
     </aside>
 
     <main className="main-area">
-      <header className="topbar"><div className="breadcrumb"><span>Laboratorio</span><span className="crumb-slash">/</span><strong>{selected?.short ?? 'Inicio'}</strong></div><div className="top-actions"><div className="settings-menu"><button className="icon-button settings-trigger" aria-label="Apariencia" aria-expanded={showSettings} onClick={() => setShowSettings(!showSettings)}>{darkMode ? <Moon size={18} /> : <Sun size={18} />}</button>{showSettings && <section className="settings-popover" aria-label="Apariencia"><div className="settings-heading"><strong>Apariencia</strong></div><div className="theme-setting"><div className="theme-setting-icon">{darkMode ? <Moon size={16} /> : <Sun size={16} />}</div><div className="theme-setting-copy"><strong>Modo oscuro</strong><span>{darkMode ? 'Activado' : 'Desactivado'}</span></div><button className={`switch ${darkMode ? 'on' : ''}`} role="switch" aria-checked={darkMode} aria-label="Activar modo oscuro" onClick={() => setDarkMode(!darkMode)}><i /></button></div></section>}</div></div></header>
+      <header className="topbar"><div className="breadcrumb"><span>Laboratorio</span><span className="crumb-slash">/</span><strong>{selected?.short ?? 'Inicio'}</strong></div><div className="top-actions"><EngineStatus /><div className="settings-menu"><button className="icon-button settings-trigger" aria-label="Apariencia" aria-expanded={showSettings} onClick={() => setShowSettings(!showSettings)}>{darkMode ? <Moon size={18} /> : <Sun size={18} />}</button>{showSettings && <section className="settings-popover" aria-label="Apariencia"><div className="settings-heading"><strong>Apariencia</strong></div><div className="theme-setting"><div className="theme-setting-icon">{darkMode ? <Moon size={16} /> : <Sun size={16} />}</div><div className="theme-setting-copy"><strong>Modo oscuro</strong><span>{darkMode ? 'Activado' : 'Desactivado'}</span></div><button className={`switch ${darkMode ? 'on' : ''}`} role="switch" aria-checked={darkMode} aria-label="Activar modo oscuro" onClick={() => setDarkMode(!darkMode)}><i /></button></div></section>}</div></div></header>
 
       {selected ? <section className="module-page">
         <button className="back-link" onClick={() => setActive(null)}><ArrowLeft size={15} />Todos los módulos</button>
