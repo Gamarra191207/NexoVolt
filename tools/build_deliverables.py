@@ -16,6 +16,7 @@ from reportlab.platypus import (
     BaseDocTemplate,
     Frame,
     HRFlowable,
+    Image,
     KeepTogether,
     PageBreak,
     PageTemplate,
@@ -70,7 +71,7 @@ REGULAR, BOLD, ITALIC = register_fonts()
 
 def inline_markup(text: str) -> str:
     escaped = html.escape(text, quote=False)
-    escaped = re.sub(r"`([^`]+)`", rf'<font name="Courier" color="#174C50">\1</font>', escaped)
+    escaped = re.sub(r"`([^`]+)`", rf'<font name="{REGULAR}" color="#174C50">\1</font>', escaped)
     escaped = re.sub(r"\*\*([^*]+)\*\*", rf'<font name="{BOLD}">\1</font>', escaped)
     return escaped
 
@@ -225,6 +226,19 @@ class NexoDocTemplate(BaseDocTemplate):
 
 
 def cover(spec: DocumentSpec):
+    if spec.kind == "Manual de usuario":
+        return [
+            Spacer(1, 0.42 * inch),
+            Paragraph("NEXOVOLT", ParagraphStyle("BrandUser", parent=STYLES["small"], fontName=BOLD, fontSize=10, textColor=ACCENT, spaceAfter=30)),
+            Paragraph(spec.title, STYLES["title"]),
+            Paragraph("Aprende a usar las cuatro estaciones con imágenes y actividades guiadas", STYLES["subtitle"]),
+            Spacer(1, 0.15 * inch),
+            HRFlowable(width="28%", thickness=3, color=ACCENT, spaceBefore=4, spaceAfter=24, hAlign="LEFT"),
+            Paragraph("Empieza en Inicio y sigue las prácticas a tu ritmo", ParagraphStyle("CoverUser", parent=STYLES["body"], fontName=BOLD, fontSize=11, textColor=ACCENT_DARK)),
+            Spacer(1, 2.6 * inch),
+            Paragraph("10 de noviembre de 2026", STYLES["small"]),
+            PageBreak(),
+        ]
     return [
         Spacer(1, 0.42 * inch),
         Paragraph("NEXOVOLT", ParagraphStyle("Brand", parent=STYLES["small"], fontName=BOLD, fontSize=10, textColor=ACCENT, tracking=1.4, spaceAfter=30)),
@@ -327,6 +341,21 @@ def markdown_story(spec: DocumentSpec):
             story.append(Paragraph(inline_markup(stripped[4:].strip()), STYLES["h3"]))
             index += 1
             continue
+        image_match = re.fullmatch(r"!\[([^]]+)\]\(([^)]+)\)", stripped)
+        if image_match:
+            flush_paragraph()
+            image_path = (spec.source.parent / image_match.group(2)).resolve()
+            if not image_path.is_file() or not image_path.is_relative_to(ROOT):
+                raise ValueError(f"Imagen del manual no encontrada: {image_path}")
+            illustration = Image(str(image_path))
+            scale = min(7.0 * inch / illustration.imageWidth, 4.25 * inch / illustration.imageHeight)
+            illustration.drawWidth = illustration.imageWidth * scale
+            illustration.drawHeight = illustration.imageHeight * scale
+            story.append(Spacer(1, 8))
+            story.append(illustration)
+            story.append(Paragraph(image_match.group(1), ParagraphStyle("Caption", parent=STYLES["small"], fontName=ITALIC, alignment=TA_CENTER, spaceBefore=5, spaceAfter=13)))
+            index += 1
+            continue
         if stripped.startswith("|"):
             flush_paragraph()
             rows, index = parse_table(lines, index)
@@ -376,7 +405,11 @@ def main():
             kind="Informe técnico",
         ),
     ]
+    import sys
+    requested = sys.argv[1:] or ["manual", "informe"]
     for spec in specs:
+        if ("manual" if spec.kind == "Manual de usuario" else "informe") not in requested:
+            continue
         build(spec)
         print(spec.output)
 
