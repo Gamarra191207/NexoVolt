@@ -3,6 +3,8 @@ import { Minus, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { fieldAt, isAtCharge, potentialAt, type Point2D, type Point3D, type PointCharge } from '../physics/electrostatics'
 import TrajectorySimulator from './TrajectorySimulator'
 import NumericInput from './NumericInput'
+import ExperimentNav from './ExperimentNav'
+import ResultPanel from './ResultPanel'
 
 const WIDTH = 600
 const HEIGHT = 360
@@ -44,10 +46,41 @@ const chargeParts = (charge: number) => {
   const exponent = Math.max(-12, Math.min(12, Math.floor(Math.log10(Math.abs(charge)) / 3) * 3))
   return { mantissa: Math.abs(charge) / 10 ** exponent, exponent }
 }
-const scenarios: { name: string; charges: PointCharge[] }[] = [
-  { name: 'Dipolo', charges: [{ id: 1, x: -4, y: 0, z: 0, chargeCoulombs: 2e-6 }, { id: 2, x: 4, y: 0, z: 0, chargeCoulombs: -2e-6 }] },
-  { name: 'Dos cargas iguales', charges: [{ id: 1, x: -4, y: 0, z: 0, chargeCoulombs: 2e-6 }, { id: 2, x: 4, y: 0, z: 0, chargeCoulombs: 2e-6 }] },
-  { name: 'Tres cargas', charges: [{ id: 1, x: -5, y: 0, z: 0, chargeCoulombs: 2e-6 }, { id: 2, x: 0, y: 3, z: 0, chargeCoulombs: -1e-6 }, { id: 3, x: 5, y: 0, z: 0, chargeCoulombs: 2e-6 }] },
+type ChargeScenario = {
+  id: string
+  name: string
+  symbol: string
+  concept: string
+  prediction: string
+  relation: string
+  charges: PointCharge[]
+}
+
+const scenarios: ChargeScenario[] = [
+  {
+    id: 'attraction', name: 'Atracción', symbol: '+ −', concept: 'Cargas opuestas',
+    prediction: 'Las fuerzas apuntan una hacia la otra: si se liberaran, las esferas se acercarían.',
+    relation: 'La línea de campo nace en + y termina en −.',
+    charges: [{ id: 1, x: -4, y: 0, z: 1.4, chargeCoulombs: 2e-6 }, { id: 2, x: 4, y: 0, z: -1.4, chargeCoulombs: -2e-6 }],
+  },
+  {
+    id: 'repulsion', name: 'Repulsión', symbol: '+ +', concept: 'Cargas del mismo signo',
+    prediction: 'Las fuerzas se alejan del centro: si se liberaran, las esferas se separarían.',
+    relation: 'Las líneas de campo salen de ambas cargas y no se conectan.',
+    charges: [{ id: 1, x: -4, y: 0, z: 1.2, chargeCoulombs: 2e-6 }, { id: 2, x: 4, y: 0, z: -1.2, chargeCoulombs: 2e-6 }],
+  },
+  {
+    id: 'dipole', name: 'Dipolo', symbol: '↗ E', concept: 'Campo tridimensional',
+    prediction: 'Cerca de las cargas el campo se curva; lejos de ellas se percibe el conjunto como un dipolo.',
+    relation: 'El campo es más intenso donde las líneas aparecen más juntas.',
+    charges: [{ id: 1, x: -3.5, y: -1.8, z: -1.8, chargeCoulombs: 3e-6 }, { id: 2, x: 3.5, y: 1.8, z: 1.8, chargeCoulombs: -3e-6 }],
+  },
+  {
+    id: 'superposition', name: 'Superposición', symbol: 'ΣF', concept: 'Tres cargas',
+    prediction: 'Cada carga aporta un vector. El campo visible en cada punto es la suma de todos ellos.',
+    relation: 'En el centro pueden aparecer zonas de campo débil por cancelación parcial.',
+    charges: [{ id: 1, x: -5, y: -1, z: -1.2, chargeCoulombs: 2e-6 }, { id: 2, x: 0, y: 3.6, z: 1.8, chargeCoulombs: -1e-6 }, { id: 3, x: 5, y: -1, z: -1.2, chargeCoulombs: 2e-6 }],
+  },
 ]
 
 function contours(charges: PointCharge[], camera: Camera) {
@@ -141,8 +174,11 @@ function equipotentialSurfaces(charges: PointCharge[], camera: Camera) {
 
 function fieldLines(charges: PointCharge[], threeD = false) {
   const lines: Point3D[][] = []
-  for (const source of charges.filter((charge) => charge.chargeCoulombs > 0)) {
-    const count = threeD ? 28 : 18
+  const positiveSources = charges.filter((charge) => charge.chargeCoulombs > 0)
+  const sources = positiveSources.length ? positiveSources : charges.filter((charge) => charge.chargeCoulombs < 0)
+  for (const source of sources) {
+    const directionSign = source.chargeCoulombs > 0 ? 1 : -1
+    const count = threeD ? 14 : 18
     for (let seed = 0; seed < count; seed++) {
       const angle = seed * Math.PI * (3 - Math.sqrt(5))
       const sphereZ = threeD ? 1 - 2 * (seed + .5) / count : 0
@@ -155,11 +191,11 @@ function fieldLines(charges: PointCharge[], threeD = false) {
         const magnitude = Math.hypot(vector.x, vector.y, vector.z)
         if (magnitude < 1e-10) break
         const distanceStep = threeD ? .12 : .1
-        point = { x: point.x + vector.x / magnitude * distanceStep, y: point.y + vector.y / magnitude * distanceStep, z: point.z + vector.z / magnitude * distanceStep }
+        point = { x: point.x + vector.x / magnitude * distanceStep * directionSign, y: point.y + vector.y / magnitude * distanceStep * directionSign, z: point.z + vector.z / magnitude * distanceStep * directionSign }
         path.push({ ...point })
         if (charges.some((charge) => Math.hypot(point.x - charge.x, point.y - charge.y, point.z - charge.z) < .6)) break
       }
-      lines.push(path)
+      lines.push(directionSign > 0 ? path : path.reverse())
     }
   }
   return lines
@@ -167,21 +203,22 @@ function fieldLines(charges: PointCharge[], threeD = false) {
 
 export default function ElectricFieldLab() {
   const [activeTool, setActiveTool] = useState<'viewer' | 'trajectory'>('viewer')
-  const [threeD, setThreeD] = useState(false)
-  const [charges, setCharges] = useState<PointCharge[]>([])
-  const [selectedScenario, setSelectedScenario] = useState('empty')
+  const [threeD, setThreeD] = useState(true)
+  const [charges, setCharges] = useState<PointCharge[]>(() => scenarios[0].charges.map((charge) => ({ ...charge })))
+  const [selectedScenario, setSelectedScenario] = useState(scenarios[0].id)
   const [probe, setProbe] = useState<Point3D>({ x: 0, y: 3.2, z: 0 })
   const [showField, setShowField] = useState(true)
-  const [showPotential, setShowPotential] = useState(true)
+  const [showPotential, setShowPotential] = useState(false)
   const [dragging, setDragging] = useState<number | 'probe' | 'orbit' | 'pan' | 'depth' | null>(null)
   const [camera, setCamera] = useState<Camera>({ yaw: -.45, pitch: .35, zoom: .82, target: { x: 0, y: 0, z: 0 } })
   const pointerPosition = useRef<Point2D | null>(null)
-  const [nextId, setNextId] = useState(1)
+  const [nextId, setNextId] = useState(3)
   const probeWorld = probe
   const field = fieldAt(probeWorld, charges)
   const magnitude = Math.hypot(field.x, field.y, field.z)
   const potential = potentialAt(probeWorld, charges)
   const probeAtSource = isAtCharge(probeWorld, charges)
+  const activeScenario = scenarios.find((scenario) => scenario.id === selectedScenario)
   const equipotentials = useMemo(() => contours(charges, camera), [charges, camera.target.x, camera.target.y, camera.zoom])
   const surfaces3D = useMemo(() => threeD ? equipotentialSurfaces(charges, camera) : [], [charges, threeD, camera.target.x, camera.target.y, camera.target.z, camera.zoom])
   const surfacesInView = useMemo(() => surfaces3D.map((surface) => ({ ...surface, depth: surface.vertices.reduce((sum, point) => sum + cameraDepth(point, camera), 0) / surface.vertices.length })).sort((a, b) => a.depth - b.depth), [surfaces3D, camera])
@@ -196,8 +233,13 @@ export default function ElectricFieldLab() {
   function updateCharges(next: PointCharge[]) { setCharges(next); setSelectedScenario('custom') }
   function loadScenario(value: string) {
     setSelectedScenario(value)
-    setCharges(value === 'empty' ? [] : scenarios[Number(value)].charges.map((charge) => ({ ...charge })))
-    setNextId(value === 'empty' ? 1 : Math.max(...scenarios[Number(value)].charges.map((charge) => charge.id)) + 1)
+    if (value === 'empty') { setCharges([]); setNextId(1); return }
+    const scenario = scenarios.find((item) => item.id === value)
+    if (!scenario) return
+    setCharges(scenario.charges.map((charge) => ({ ...charge })))
+    setNextId(Math.max(...scenario.charges.map((charge) => charge.id)) + 1)
+    setProbe({ x: 0, y: 3.2, z: 0 })
+    setCamera((current) => ({ ...current, target: { x: 0, y: 0, z: 0 }, zoom: .82 }))
   }
 
   function move(event: PointerEvent<SVGSVGElement>) {
@@ -264,27 +306,28 @@ export default function ElectricFieldLab() {
 
   function changeZoom(factor: number) { setCamera((current) => ({ ...current, zoom: Math.max(.08, Math.min(8, current.zoom * factor)) })) }
 
-  function reset() { setCharges([]); setSelectedScenario('empty'); setProbe({ x: 0, y: 3.2, z: 0 }); setNextId(1); setCamera({ yaw: -.45, pitch: .35, zoom: .82, target: { x: 0, y: 0, z: 0 } }) }
+  function reset() { setThreeD(true); setCharges(scenarios[0].charges.map((charge) => ({ ...charge }))); setSelectedScenario(scenarios[0].id); setProbe({ x: 0, y: 3.2, z: 0 }); setNextId(3); setShowField(true); setShowPotential(false); setCamera({ yaw: -.45, pitch: .35, zoom: .82, target: { x: 0, y: 0, z: 0 } }) }
 
   return <div className="electric-lab">
-    <nav className="module-tools-nav" aria-label="Herramientas de electrostática">{[
-      { id: 'viewer' as const, title: 'Visualizador de cargas y potencial' }, { id: 'trajectory' as const, title: 'Simulador de trayectoria' },
-    ].map((item) => <button key={item.id} className={activeTool === item.id ? 'active' : ''} onClick={() => setActiveTool(item.id)}>{item.title}</button>)}</nav>
-    {activeTool === 'trajectory' ? <TrajectorySimulator charges={charges} /> : <>
+    <ExperimentNav activeId={activeTool} ariaLabel="Experiencias de electrostática" onSelect={setActiveTool} items={[
+      { id: 'viewer', title: 'Cargas y potencial', description: 'Campo, potencial y puntos de prueba' },
+      { id: 'trajectory', title: 'Trayectoria de partículas', description: 'Movimiento bajo fuerzas eléctricas' },
+    ]} />
+    {activeTool === 'trajectory' ? <TrajectorySimulator /> : <>
     <div className="electric-toolbar">
-      <label className="scenario-picker"><span>ESCENARIO</span><select value={selectedScenario} onChange={(event) => loadScenario(event.target.value)}><option value="empty">Escenario vacío</option>{scenarios.map((scenario, index) => <option value={index} key={scenario.name}>{scenario.name}</option>)}{selectedScenario === 'custom' && <option value="custom" disabled>Personalizado</option>}</select></label>
-      <div className="viewer-actions"><div className="dimension-switch"><button className={!threeD ? 'active' : ''} onClick={() => { setThreeD(false); setProbe((current) => ({ ...current, z: 0 })); if (charges.some((charge) => charge.z !== 0)) updateCharges(charges.map((charge) => ({ ...charge, z: 0 }))) }}>2D</button><button className={threeD ? 'active' : ''} onClick={() => setThreeD(true)}>3D</button></div><div className="zoom-actions"><button aria-label="Alejar vista" title="Alejar vista" onClick={() => changeZoom(.65)}><Minus size={13} /></button><button aria-label="Acercar vista" title="Acercar vista" onClick={() => changeZoom(1.5)}><Plus size={13} /></button></div><button className="center-view-button" onClick={centerOnCharges}>Centrar cargas</button><button className="reset-button" onClick={reset}><RotateCcw size={14} />Reiniciar</button></div>
+      <div className="scenario-picker" role="group" aria-label="Casos de interacción entre cargas"><span>CASOS 3D</span><div className="scenario-case-list">{scenarios.map((scenario) => <button key={scenario.id} className={selectedScenario === scenario.id ? 'active' : ''} onClick={() => loadScenario(scenario.id)}><b>{scenario.symbol}</b><span>{scenario.name}</span></button>)}<button className={selectedScenario === 'empty' ? 'active' : ''} onClick={() => loadScenario('empty')}><b>＋</b><span>Libre</span></button></div></div>
+      <div className="viewer-actions"><div className="dimension-switch"><button className={!threeD ? 'active' : ''} onClick={() => { setThreeD(false); setProbe((current) => ({ ...current, z: 0 })) }}>2D</button><button className={threeD ? 'active' : ''} onClick={() => setThreeD(true)}>3D</button></div><div className="zoom-actions"><button aria-label="Alejar vista" title="Alejar vista" onClick={() => changeZoom(.65)}><Minus size={13} /></button><button aria-label="Acercar vista" title="Acercar vista" onClick={() => changeZoom(1.5)}><Plus size={13} /></button></div><button className="center-view-button" onClick={centerOnCharges}>Centrar cargas</button><button className="reset-button" onClick={reset}><RotateCcw size={14} />Reiniciar</button></div>
     </div>
     <div className="electric-workspace"><div className="electric-visual"><div className={`electric-canvas-wrap ${threeD ? 'navigable-3d' : ''}`}><svg className="electric-canvas" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={threeD ? 'Visualizador 3D interactivo de cargas, campo y potencial' : 'Visualizador 2D interactivo de cargas, campo y potencial'} onPointerDown={startNavigation} onPointerMove={move} onPointerUp={finishPointer} onPointerCancel={finishPointer} onWheel={zoomScene}>
-      <defs><pattern id="electricGrid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#e5eaf1" strokeWidth=".7" /><circle cx="0" cy="0" r="1" fill="#d4dce7" /></pattern><marker id="fieldArrow" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#5c82c5" /></marker></defs>
-      <rect width={WIDTH} height={HEIGHT} fill={threeD ? '#fbfcfe' : 'url(#electricGrid)'} />
+      <defs><radialGradient id="positiveSphere" cx="32%" cy="25%" r="72%"><stop offset="0" stopColor="#dbe9ff" /><stop offset=".2" stopColor="#7ca8ff" /><stop offset=".68" stopColor="#3465c5" /><stop offset="1" stopColor="#173774" /></radialGradient><radialGradient id="negativeSphere" cx="32%" cy="25%" r="72%"><stop offset="0" stopColor="#ffe2e4" /><stop offset=".2" stopColor="#ef8b94" /><stop offset=".68" stopColor="#c84e5d" /><stop offset="1" stopColor="#762331" /></radialGradient><filter id="sphereShadow" x="-80%" y="-80%" width="260%" height="260%"><feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#172844" floodOpacity=".28" /></filter><marker id="fieldArrow" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#5c82c5" /></marker><marker id="forceArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ed8a3d" /></marker></defs>
+      <rect width={WIDTH} height={HEIGHT} fill="#fbfcfe" />
       {!threeD && (() => { const origin = project({ x: 0, y: 0, z: 0 }); return <path d={`M${origin.x} 0V${HEIGHT}M0 ${origin.y}H${WIDTH}`} stroke="#d4dae4" strokeWidth="1" /> })()}
       {threeD && spatialAxes.map(({ label, end, color }) => { const origin = project({ x: 0, y: 0, z: 0 }), tip = project(end); return <g key={`axis-${label}`}><line x1={origin.x} y1={origin.y} x2={tip.x} y2={tip.y} stroke={color} strokeWidth="1.7" /><text x={tip.x + 4} y={tip.y - 4} fill={color} fontSize="11" fontWeight="700">{label}</text></g> })}
       {threeD && showPotential && surfacesInView.map(({ level, vertices }, index) => { const points = vertices.map(project).map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' '); return <polygon key={`surface-${index}`} points={points} fill={level > 0 ? '#e5a46e' : '#6e91d1'} fillOpacity=".08" stroke={level > 0 ? '#d99059' : '#6486c3'} strokeOpacity=".14" strokeWidth=".65" /> })}
       {showPotential && !threeD && equipotentials.map(({ level, d }) => <path key={level} d={d} fill="none" stroke={level > 0 ? '#e5a46e' : '#6e91d1'} strokeWidth="1.2" opacity=".68" />)}
-      {showField && fieldPaths.map((line, index) => <path key={`line-${index}`} d={line.map((point, pointIndex) => { const projected = project(point); return `${pointIndex ? 'L' : 'M'}${projected.x.toFixed(1)},${projected.y.toFixed(1)}` }).join(' ')} fill="none" stroke="#5f84c5" strokeWidth={threeD ? '.9' : '1.25'} opacity={threeD ? '.36' : '.58'} markerEnd="url(#fieldArrow)" />)}
-      {showField && (threeD ? [-1, -.5, 0, .5, 1].map((slice) => camera.target.z + slice * HEIGHT / (40 * camera.zoom)) : [0]).flatMap((z) => Array.from({ length: 11 }, (_, row) => Array.from({ length: 17 }, (_, col) => {
-        const point = { x: 18 + col * 35, y: 15 + row * 33 }
+      {showField && fieldPaths.map((line, index) => { const d = line.map((point, pointIndex) => { const projected = project(point); return `${pointIndex ? 'L' : 'M'}${projected.x.toFixed(1)},${projected.y.toFixed(1)}` }).join(' '); const arrowFractions = threeD ? [.48] : [.38, .72]; return <g key={`line-${index}`} className={`field-flow ${threeD ? 'field-flow-3d' : ''}`}><path className="field-flow-halo" d={d} /><path className="field-flow-path" d={d} />{arrowFractions.map((fraction) => { const startIndex = Math.min(line.length - 2, Math.floor(line.length * fraction)); const endIndex = Math.min(line.length - 1, startIndex + Math.max(2, Math.floor(line.length * .018))); const start = project(line[startIndex]); const tip = project(line[endIndex]); return <line key={fraction} className="field-direction-arrow" x1={start.x} y1={start.y} x2={tip.x} y2={tip.y} markerEnd="url(#fieldArrow)" /> })}{threeD && index % 4 === 0 && <circle className="field-particle" r="2.6"><animateMotion dur={`${3.4 + index % 4 * .4}s`} begin={`${-(index % 5) * .55}s`} repeatCount="indefinite" path={d} /></circle>}</g> })}
+      {showField && !threeD && [0].flatMap((z) => Array.from({ length: 9 }, (_, row) => Array.from({ length: 13 }, (_, col) => {
+        const point = { x: 28 + col * 45, y: 28 + row * 39 }
         const world = threeD ? unprojectAtZ(point, camera, z) : unproject2D(point, camera)
         if (charges.some((charge) => Math.hypot(world.x - charge.x, world.y - charge.y, world.z - charge.z) < 1.25)) return null
         const vector = fieldAt(world, charges); const norm = Math.hypot(vector.x, vector.y, vector.z)
@@ -292,16 +335,47 @@ export default function ElectricFieldLab() {
         const start = project(world)
         const tip = project({ x: world.x + vector.x / norm * .35, y: world.y + vector.y / norm * .35, z: world.z + vector.z / norm * .35 })
         const intensity = Math.min(1, Math.max(.28, Math.log10(norm + 1) / 8))
-        return <line key={`${z}-${row}-${col}`} x1={start.x} y1={start.y} x2={tip.x} y2={tip.y} stroke="#527ab9" strokeWidth={threeD ? '.85' : '1.15'} opacity={threeD ? intensity * .55 : intensity * .82} markerEnd="url(#fieldArrow)" />
+        return <line key={`${z}-${row}-${col}`} className="field-sample-arrow" x1={start.x} y1={start.y} x2={tip.x} y2={tip.y} opacity={intensity * .72} markerEnd="url(#fieldArrow)" />
       }))) }
-      {charges.map((charge) => { const point = project(charge); const positive = charge.chargeCoulombs > 0; const color = positive ? '#547cda' : '#d47777'; return <g key={charge.id} transform={`translate(${point.x} ${point.y})`} onPointerDown={(event) => { event.stopPropagation(); setDragging(charge.id); event.currentTarget.ownerSVGElement?.setPointerCapture(event.pointerId) }} className="charge-handle" role="button" aria-label={`Mover carga ${positive ? 'positiva' : 'negativa'}`}><circle r="28" fill="none" stroke={color} strokeWidth="1" opacity=".1" /><circle r="22" fill="none" stroke={color} strokeWidth="1.4" opacity=".17" /><circle r="16" fill={color} opacity=".16" /><circle r="12" fill={color} stroke="white" strokeWidth="1.4" /><text y="4" textAnchor="middle" fill="white" fontSize="15" fontWeight="700">{positive ? '+' : '−'}</text><text y="34" textAnchor="middle" fill="#40516b" fontSize="8" fontWeight="600">{scientific(charge.chargeCoulombs)} C{threeD ? ` · z ${charge.z.toFixed(1)}` : ''}</text></g> })}
+      {threeD && charges.map((charge) => { const others = charges.filter((item) => item.id !== charge.id); if (!others.length) return null; const electric = fieldAt(charge, others); const force = { x: electric.x * charge.chargeCoulombs, y: electric.y * charge.chargeCoulombs, z: electric.z * charge.chargeCoulombs }; const norm = Math.hypot(force.x, force.y, force.z); if (norm < 1e-12) return null; const start = project(charge); const tip = project({ x: charge.x + force.x / norm * 2.2, y: charge.y + force.y / norm * 2.2, z: charge.z + force.z / norm * 2.2 }); return <g key={`force-${charge.id}`} className="force-vector"><line x1={start.x} y1={start.y} x2={tip.x} y2={tip.y} markerEnd="url(#forceArrow)" /><text x={(start.x + tip.x) / 2 + 5} y={(start.y + tip.y) / 2 - 5}>F</text></g> })}
+      {charges.map((charge) => {
+        const point = project(charge)
+        const positive = charge.chargeCoulombs > 0
+        const color = positive ? '#547cda' : '#d47777'
+        return <g key={charge.id} transform={`translate(${point.x} ${point.y})`} onPointerDown={(event) => { event.stopPropagation(); setDragging(charge.id); event.currentTarget.ownerSVGElement?.setPointerCapture(event.pointerId) }} className={`charge-handle ${threeD ? 'charge-sphere-3d' : ''}`} role="button" aria-label={`Mover carga ${positive ? 'positiva' : 'negativa'}`}>
+          {threeD ? <g className={`charge-aura ${positive ? 'positive-aura' : 'negative-aura'}`}>
+            <circle className="aura-wave aura-wave-one" r="22" />
+            <circle className="aura-wave aura-wave-two" r="22" />
+            <circle className="aura-wave aura-wave-three" r="22" />
+            <g className="aura-orbit"><ellipse rx="29" ry="11" /><circle cx="29" cy="0" r="2.4" /></g>
+          </g> : <><circle r="29" fill="none" stroke={color} strokeWidth="1" opacity=".1" /><circle r="23" fill="none" stroke={color} strokeWidth="1.4" opacity=".17" /></>}
+          <circle r={threeD ? 17 : 16} fill={threeD ? `url(#${positive ? 'positiveSphere' : 'negativeSphere'})` : color} opacity={threeD ? 1 : .16} filter={threeD ? 'url(#sphereShadow)' : undefined} />
+          <circle r={threeD ? 17 : 12} fill={threeD ? 'transparent' : color} stroke="white" strokeWidth="1.4" />
+          <text y="5" textAnchor="middle" fill="white" fontSize={threeD ? 18 : 15} fontWeight="700">{positive ? '+' : '−'}</text>
+          <text y="43" textAnchor="middle" fill="#40516b" fontSize="8" fontWeight="700">{scientific(charge.chargeCoulombs)} C{threeD ? ` · z ${charge.z.toFixed(1)}` : ''}</text>
+        </g>
+      })}
       {(() => { const point = project(probeWorld); return <g transform={`translate(${point.x} ${point.y})`} onPointerDown={(event) => { event.stopPropagation(); setDragging('probe'); event.currentTarget.ownerSVGElement?.setPointerCapture(event.pointerId) }} className="probe-handle" role="button" aria-label="Mover punto de prueba"><circle r="11" fill="#273b5d" stroke="white" strokeWidth="3" /><path d="M-17 0H17M0-17V17" stroke="#273b5d" strokeWidth="1" /><text x="14" y="-13" fill="#273b5d" fontSize="10" fontWeight="700">P</text></g> })()}
-    </svg><div className="canvas-axis-label">x (cm) <span>y (cm)</span>{threeD && <span>z (cm)</span>}</div><div className="orbit-hint">{threeD ? 'Arrastra para rotar · Shift + arrastra para desplazar · Alt + arrastra para mover en z · rueda para zoom' : 'Arrastra para desplazarte · rueda o controles +/− para cambiar la escala'}</div></div><div className="visual-caption">{threeD ? 'Espacio 3D libre: rota, desplaza y cambia la profundidad del encuadre.' : 'Plano 2D sin límites: desplázate y aleja la vista para explorar más espacio.'}</div>
-    <div className="electric-options"><button className={showField ? 'toggle-on' : ''} onClick={() => setShowField(!showField)}><i className="field-key" />Dirección del campo</button><button className={showPotential ? 'toggle-on' : ''} onClick={() => setShowPotential(!showPotential)}><i className="potential-key" />Equipotenciales</button><button onClick={addCharge} disabled={charges.length >= 10}><Plus size={14} />Agregar carga</button>{charges.length > 0 && <button onClick={() => updateCharges(charges.slice(0, -1))}><Trash2 size={13} />Quitar carga</button>}</div></div>
+    </svg><div className="canvas-axis-label">x (cm) <span>y (cm)</span>{threeD && <span>z (cm)</span>}</div>{threeD && charges.length > 1 && <div className="force-legend"><i />Fuerza sobre cada carga</div>}<div className="orbit-hint">{threeD ? 'Arrastra para observar desde otro ángulo · rueda para acercar' : 'Arrastra para desplazarte · rueda o controles +/− para cambiar la escala'}</div></div>{activeScenario ? <section className="didactic-case" aria-live="polite"><div className="didactic-case-index"><span>CASO ACTIVO</span><strong>{activeScenario.name}</strong><small>{activeScenario.concept}</small></div><div className="didactic-explanation"><span>¿Qué pasaría?</span><p>{activeScenario.prediction}</p></div><div className="didactic-observation"><span>OBSERVA</span><p>{activeScenario.relation}</p></div></section> : null}
+    <div className="electric-options"><button className={showField ? 'toggle-on' : ''} onClick={() => setShowField(!showField)}><i className="field-key" />Flujo del campo</button><button className={showPotential ? 'toggle-on' : ''} onClick={() => setShowPotential(!showPotential)}><i className="potential-key" />Equipotenciales</button><button onClick={addCharge} disabled={charges.length >= 10}><Plus size={14} />Agregar carga</button>{charges.length > 0 && <button onClick={() => updateCharges(charges.slice(0, -1))}><Trash2 size={13} />Quitar carga</button>}</div></div>
     <aside className="electric-control-panel"><div className="charge-panel-heading">CARGAS FUENTE <span>{charges.length}/10</span></div>{charges.length ? <div className="charge-editors">{charges.map((charge) => { const parts = chargeParts(charge.chargeCoulombs); return <div key={charge.id} className="charge-editor"><span className={`charge-editor-dot ${charge.chargeCoulombs < 0 ? 'negative' : ''}`} />Carga {charge.id}<select aria-label={`Signo de carga ${charge.id}`} value={charge.chargeCoulombs < 0 ? -1 : 1} onChange={(event) => updateCharges(charges.map((item) => item.id === charge.id ? { ...item, chargeCoulombs: Math.abs(item.chargeCoulombs) * Number(event.target.value) } : item))}><option value={1}>+</option><option value={-1}>−</option></select><NumericInput aria-label={`Magnitud de carga ${charge.id}`} min={1} max={999} step={1} value={Number(parts.mantissa.toPrecision(4))} onValueChange={(value) => updateCharges(charges.map((item) => item.id === charge.id ? { ...item, chargeCoulombs: Math.sign(item.chargeCoulombs) * value * 10 ** parts.exponent } : item))} /><select aria-label={`Prefijo de carga ${charge.id}`} value={parts.exponent} onChange={(event) => { const exponent = Number(event.target.value); updateCharges(charges.map((item) => item.id === charge.id ? { ...item, chargeCoulombs: Math.sign(item.chargeCoulombs) * parts.mantissa * 10 ** exponent } : item)) }}>{chargePrefixes.map((prefix) => <option key={prefix.exponent} value={prefix.exponent}>{prefix.label}</option>)}</select><div className={`charge-position-fields ${threeD ? 'three-d' : ''}`}>{(['x', 'y'] as const).map((axis) => <label key={axis}>{axis}<NumericInput step={0.1} value={charge[axis]} onValueChange={(value) => updateCharges(charges.map((item) => item.id === charge.id ? { ...item, [axis]: value } : item))} /></label>)}{threeD && <label>z<NumericInput step={0.1} value={charge.z} onValueChange={(z) => updateCharges(charges.map((item) => item.id === charge.id ? { ...item, z } : item))} /></label>}</div></div> })}</div> : <p className="empty-charge-note">Sin cargas</p>}
       <div className="probe-editor"><div className="charge-panel-heading"><span>PUNTO P · cm</span><button className="inline-view-button" onClick={() => setCamera((current) => ({ ...current, target: { x: probe.x, y: probe.y, z: probe.z } }))}>Centrar</button></div><div className="probe-coordinate-inputs">{(['x', 'y', 'z'] as const).map((axis) => <label key={axis}>{axis.toUpperCase()}<NumericInput step={0.1} value={probe[axis]} disabled={!threeD && axis === 'z'} onValueChange={(value) => setProbe((current) => ({ ...current, [axis]: value }))} aria-label={`Coordenada ${axis} del punto P en centímetros`} /></label>)}</div></div>
-      <div className="probe-results"><div className="probe-results-heading">RESULTADOS EN P</div><div className="probe-result-item"><span>Campo eléctrico |E⃗|</span><strong>{probeAtSource ? 'Indefinido' : <>{scientific(magnitude)} <small>N/C</small></>}</strong>{!probeAtSource && <span className="vector-result">Eₓ {scientific(field.x)} · Eᵧ {scientific(field.y)} · E_z {scientific(field.z)} N/C</span>}</div><div className="probe-result-item"><span>Potencial eléctrico</span><strong>{probeAtSource ? 'Indefinido' : <>{scientific(potential)} <small>V</small></>}</strong></div><div className="probe-result-item"><span>Ubicación de P (x, y, z)</span><strong>({scientific(probeWorld.x / 100)}; {scientific(probeWorld.y / 100)}; {scientific(probeWorld.z / 100)}) <small>m</small></strong></div></div>
-      <div className="physics-note">El campo es vectorial y el potencial es escalar. Se aplica superposición para cargas puntuales; ambos resultados son indefinidos exactamente sobre una carga fuente.</div>
+      <ResultPanel
+        className="probe-results"
+        title="Resultados en P"
+        status={probeAtSource ? 'Indefinido' : 'En vivo'}
+        statusTone={probeAtSource ? 'warning' : 'ready'}
+        primaryLabel="Campo eléctrico |E⃗|"
+        primaryValue={probeAtSource ? '—' : <>{scientific(magnitude)} <small>N/C</small></>}
+        primaryDetail={probeAtSource ? 'El punto coincide con una carga fuente' : 'Magnitud vectorial en el punto de prueba'}
+        metrics={[
+          { label: 'Potencial eléctrico', value: probeAtSource ? '—' : <>{scientific(potential)} <small>V</small></> },
+          { label: 'Componente Eₓ', value: probeAtSource ? '—' : <>{scientific(field.x)} <small>N/C</small></> },
+          { label: 'Componente Eᵧ', value: probeAtSource ? '—' : <>{scientific(field.y)} <small>N/C</small></> },
+          { label: 'Componente E_z', value: probeAtSource ? '—' : <>{scientific(field.z)} <small>N/C</small></> },
+          { label: 'Ubicación P (x, y, z)', value: <>({scientific(probeWorld.x / 100)}; {scientific(probeWorld.y / 100)}; {scientific(probeWorld.z / 100)}) <small>m</small></>, wide: true },
+        ]}
+      />
     </aside></div>
     </>}
   </div>

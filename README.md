@@ -25,6 +25,22 @@ npm install
 npm run tauri dev
 ```
 
+## Entregables
+
+- [Manual de usuario en PDF](docs/pdf/manual-usuario-nexovolt.pdf)
+- [Informe técnico en PDF](docs/pdf/informe-tecnico-nexovolt.pdf)
+- [Fuente editable del manual](docs/manual-usuario.md)
+- [Fuente editable del informe técnico](docs/informe-tecnico.md)
+
+## Validación
+
+```sh
+npm run build
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+La entrega actual compila correctamente y contiene quince pruebas unitarias de Rust para los modelos de electrostática, capacitores, circuitos y magnetismo.
+
 ## Módulos
 
 1. Campo eléctrico y potencial eléctrico

@@ -80,6 +80,292 @@ body{background:var(--nx-bg);color:var(--nx-ink)}
 .app-shell[data-theme="dark"]{--nx-bg:#0b1218;--nx-surface:#121f26;--nx-surface-2:#18262d;--nx-ink:#dce9ed;--nx-muted:#8499a1;--nx-line:#2a3b42;background:var(--nx-bg)}
 .app-shell[data-theme="dark"] .main-area{background:var(--nx-bg)}.app-shell[data-theme="dark"] .topbar{border-color:#24333a}.app-shell[data-theme="dark"] .breadcrumb strong,.app-shell[data-theme="dark"] .module-heading h1,.app-shell[data-theme="dark"] .unit-section-title h1{color:#dce9ed}.app-shell[data-theme="dark"] .command-deck{border-color:#2b4854}.app-shell[data-theme="dark"] .unit-rack .module-card{border-color:#2a3c43;background:#121f26}.app-shell[data-theme="dark"] .unit-rack .module-card-top,.app-shell[data-theme="dark"] .unit-rack .module-card-bottom{border-color:#2b3e45;background:#17262d}.app-shell[data-theme="dark"] .unit-rack .module-card h3{color:#d7e5e9}.app-shell[data-theme="dark"] .unit-rack .module-card p,.app-shell[data-theme="dark"] .unit-rack .module-experiences span{color:#849aa2}.app-shell[data-theme="dark"] .unit-rack .module-experiences,.app-shell[data-theme="dark"] .unit-rack .module-card-bottom{border-color:#2b3c43}.app-shell[data-theme="dark"] .unit-rack .module-experiences span{border-color:#293a41}.app-shell[data-theme="dark"] .module-formula strong{color:#b7c9ce}.app-shell[data-theme="dark"] .module-brief{background:#142228}.app-shell[data-theme="dark"] .module-brief strong{color:#cbdadd}.app-shell[data-theme="dark"] .simulation-card--instrument>:is(.electric-lab,.capacitor-lab,.circuit-lab,.magnetic-lab){background:#101a20}.app-shell[data-theme="dark"] .simulation-card--instrument :is(.module-tools-nav,.circuit-toolbar,.capacitor-toolbar,.electric-toolbar){border-color:#2a3b42;background:#142229}.app-shell[data-theme="dark"] .module-tools-nav{background:#142229!important;border-color:#2a3b42!important}.app-shell[data-theme="dark"] .module-tools-nav button.active{background:#1c2c33!important}.app-shell[data-theme="dark"] :is(.electric-control-panel,.camera-navigation-panel,.plate-control-panel,.plate-condition-card,.plate-results-card,.dielectric-detail,.wired-main-panel,.wired-templates,.wired-source-card,.relation-header,.relation-controls,.relation-stage,.relation-control,.variable-gauge){border-color:#2b3d44!important;background:#142229!important;color:#a9bec5!important}.app-shell[data-theme="dark"] :is(.charge-editor,.probe-editor,.probe-result-item,.camera-axis-controls label,.plate-metrics-grid>div,.wired-template-list>button,.component-inspector,.gauge-body){border-color:#2d4047!important;background:#19282f!important}.app-shell[data-theme="dark"] :is(.charge-panel-heading,.probe-results-heading,.plate-control-heading strong,.plate-section-title strong,.wired-section-title strong,.relation-header h3){color:#d0dfe3!important}.app-shell[data-theme="dark"] .plate-primary-result{border-color:#31514f!important;background:#18312f!important}.app-shell[data-theme="dark"] .plate-interpretation{background:#26223a!important}.app-shell[data-theme="dark"] .physics-note{background:#172c2c!important}.app-shell[data-theme="dark"] .relationship-summary{background:#33271e!important;color:#c8aa92!important}
 
+/* Unified light laboratory shell. Dark surfaces are reserved for simulation canvases. */
+:root{
+  --nx-bg:#f2f6f7;
+  --nx-surface:#ffffff;
+  --nx-surface-2:#edf3f4;
+  --nx-ink:#17343f;
+  --nx-muted:#68808a;
+  --nx-line:#d5e1e3;
+  --nx-chassis:#173f4a;
+  --nx-chassis-2:#123540;
+  --nx-chassis-line:#315964;
+  --nx-cyan:#218f8b;
+  --nx-cyan-dark:#176e6b;
+  --nx-green:#3f9b7e;
+  --nx-blue:#4b7f9e;
+  --nx-violet:#727ba3;
+  --nx-orange:#aa754f;
+  --nx-shadow:0 16px 38px #183b4510;
+}
+body,.app-shell{background:var(--nx-bg)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #62b9b5;outline-offset:2px}
+
+.sidebar{
+  border-right:1px solid var(--nx-line);
+  background:#f9fbfb;
+  color:var(--nx-ink);
+  box-shadow:8px 0 28px #173b4508;
+}
+.sidebar:before{background:linear-gradient(180deg,#dff0ef 0 3px,transparent 3px)}
+.brand-mark{border-color:#bcd6d7;background:#e5f2f1;color:#187c78;box-shadow:none}
+.brand strong{color:#183943}.brand strong span{color:#218f8b}.brand small{color:#7c9299}
+.side-label{color:#91a3a8}
+.sidebar .nav-link{color:#607881}
+.sidebar .nav-link:hover{border-color:#d6e3e4;background:#f0f5f5;color:#24444e}
+.sidebar .nav-link.selected{border-color:#a9cfcd;background:#e4f2f1;color:#155f5d;box-shadow:inset 3px 0 #218f8b}
+.nav-code{border-color:#d1dfe1;color:#7d9299}.nav-link.selected .nav-code{border-color:#8fc4c1;background:#fff;color:#177a76}
+.nav-copy small,.nav-link.selected .nav-copy small{color:#84979d}.nav-dot{background:#218f8b;box-shadow:none}
+.sidebar-status{border-color:#dbe5e6;color:#218f8b}.sidebar-status strong{color:#3f5c65}.sidebar-status small{color:#82959b}.sidebar-status i{background:#3f9b7e;box-shadow:0 0 0 3px #3f9b7e18}
+
+.topbar{border-color:var(--nx-line);color:var(--nx-muted)}
+.session-label{color:#718990}.breadcrumb strong{color:#24434d}
+.engine-status{border-color:#cbdcdd!important;background:#fff!important;box-shadow:0 3px 12px #173b4508!important}
+
+.command-deck.lab-overview{border-color:#c6dadb;background:#f8fbfb;box-shadow:var(--nx-shadow)}
+.command-deck:before{background:linear-gradient(135deg,#dff1ef88,transparent 55%),linear-gradient(90deg,transparent 49.8%,#8eb8b51a 50%,transparent 50.2%)}
+.command-deck .muted-eyebrow{color:#177d79}
+.command-deck .lab-overview-copy h1{color:#17343f}
+.command-deck .lab-overview-copy p{color:#637c85}
+.command-actions button{border-color:#187c78;background:#187c78;color:#fff}.command-actions button:hover{background:#126965}
+.command-actions span{color:#688089}.command-actions span svg{color:#2f8f74}
+.command-telemetry{border-color:#c7d9da;background:#e8f2f2}
+.command-telemetry header{border-color:#c9dcdd}.command-telemetry header span{color:#6f858c}.command-telemetry header strong{color:#237c66}
+.command-telemetry>div{border-color:#d1e0e1}.command-telemetry>div span{color:#6b8188}.command-telemetry>div strong{color:#24434d}.command-telemetry footer{color:#637a82}
+.command-telemetry footer i,.module-state i,.experiment-ready i{background:#3f9b7e;box-shadow:none}
+
+.unit-rack .module-card.blue,.unit-rack .module-card.violet,.unit-rack .module-card.orange,.unit-rack .module-card.green{--unit-accent:#218f8b}
+.unit-rack .module-card{border-color:#cfdddf;background:#fff}
+.unit-rack .module-card:hover{border-color:#86b8b6;box-shadow:0 11px 28px #1738420d}
+.unit-rack .module-card-top{border-color:#dbe6e7;background:#f0f5f5}
+.unit-rack .module-card .module-icon{border-color:#bcd8d6;background:#e6f2f1;color:#187c78}
+.unit-rack .module-card h3{color:#1c3d47}.unit-rack .module-card p{color:#6a8189}
+.unit-rack .module-experiences,.unit-rack .module-card-bottom{border-color:#dce6e7}
+.unit-rack .module-experiences span{border-color:#e4ebec;color:#58727b}
+.unit-rack .module-card-bottom{background:#f3f7f7;color:#176f6c}
+.module-formula strong{color:#36545e}
+
+.module-blue,.module-violet,.module-orange,.module-green{--module-accent:#218f8b}
+.module-brief{border-color:#218f8b;background:#eaf3f2}
+.module-brief>strong{color:#294a54}
+.simulation-card--instrument{border-color:#c9dcde!important;background:#edf3f4!important}
+.simulation-card--instrument>.card-topline{border-color:#cbdcde;background:#f8fbfb;color:#17343f}
+.station-code{border-color:#a7cecb;background:#e4f2f1;color:#176f6c}
+.station-title .section-kicker{color:#748b92}.station-title h2{color:#1a3a44}
+.experiment-ready{color:#648087}
+.simulation-card--instrument .fullscreen-button{border-color:#c3d5d7;background:#fff;color:#3f626c}
+.simulation-card--instrument .fullscreen-button:hover{border-color:#75b7b3;background:#e9f5f4;color:#176f6c}
+
+.module-tools-nav button.active{color:#176f6c!important}.module-tools-nav button.active:after{background:#218f8b}
+.electric-options button.toggle-on{border-color:#82bbb8!important;background:#e8f4f3!important;color:#176f6c!important}
+.physics-note,.plate-interpretation,.relationship-summary{border-left-color:#218f8b!important;background:#eaf4f3!important;color:#58727a!important}
+.plate-interpretation{border-left-color:#218f8b!important}.formula-equation{color:#176f6c!important}
+.circuit-tabs button.active{color:#176f6c!important}.wired-template-list>button:hover{border-color:#8abdb9!important;background:#edf7f6!important}
+.relationship-summary{border-left-color:#218f8b!important}
+
+/* Shared access pattern for every module experience. */
+.experiment-access{
+  display:grid;
+  grid-template-columns:190px minmax(0,1fr);
+  min-height:76px;
+  overflow:hidden;
+  border-bottom:1px solid #d3dfe1;
+  background:#f8fbfb;
+}
+.experiment-access-heading{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+  padding:14px 17px;
+  border-right:1px solid #d7e2e3;
+  background:#eef4f4;
+}
+.experiment-access-heading span{color:#177a76;font-size:7px;font-weight:800;letter-spacing:1.25px}
+.experiment-access-heading small{color:#71878e;font-size:8px;line-height:1.35}
+.experiment-access-list{display:grid;grid-template-columns:repeat(2,minmax(170px,1fr));min-width:0;padding:7px}
+.experiment-access-list button{
+  position:relative;
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  min-height:60px;
+  padding:8px 13px;
+  border:0;
+  border-right:1px solid #e0e8e9;
+  border-radius:0;
+  background:transparent;
+  color:#617981;
+  text-align:left;
+  transition:background-color .16s,color .16s,box-shadow .16s;
+}
+.experiment-access-list button:last-child{border-right:0}
+.experiment-access-list button:hover{background:#f0f6f5;color:#284750}
+.experiment-access-list button.active{background:#e6f3f2;color:#155f5d;box-shadow:inset 0 -3px #218f8b}
+.experiment-access-index{display:grid;width:30px;height:30px;place-items:center;border:1px solid #ccdcde;border-radius:50%;color:#82969c;font-size:7px;font-weight:800}
+.experiment-access-list button.active .experiment-access-index{border-color:#85bbb8;background:#fff;color:#176f6c}
+.experiment-access-copy{display:flex;min-width:0;flex-direction:column;gap:4px}
+.experiment-access-copy strong{overflow:hidden;color:inherit;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.experiment-access-copy small{overflow:hidden;color:#81949a;font-size:7px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.experiment-access-list button.active .experiment-access-copy small{color:#5f7d83}
+.circuit-context{color:#7b9097;font-size:7px;font-weight:800;letter-spacing:1px}
+.magnetic-lab .magnetic-workbench{display:block;min-height:0}
+.magnetic-lab .workbench-main{width:100%}
+
+/* Shared hierarchy for calculated outcomes in every experiment. */
+.result-panel{
+  display:block!important;
+  min-width:0;
+  padding:0!important;
+  overflow:hidden;
+  border:1px solid #cfdddf!important;
+  border-radius:7px!important;
+  background:#fff!important;
+  color:#294751!important;
+  box-shadow:none!important;
+}
+.result-panel-header{display:flex;min-height:38px;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;border-bottom:1px solid #dce6e7;background:#f5f8f8}
+.result-panel-header>div{display:flex;align-items:center;gap:7px}.result-panel-header i{width:6px;height:6px;border-radius:50%;background:#218f8b;box-shadow:0 0 0 3px #218f8b17}
+.result-panel-header strong{color:#385660;font-size:8px;letter-spacing:.25px}
+.result-panel-status{display:inline-flex;align-items:center;gap:5px;color:#237a66;font-size:6px;font-weight:800;letter-spacing:.55px;text-transform:uppercase}
+.result-panel-status:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.result-panel-status.warning{color:#a66c3f}
+.result-panel-primary{padding:13px 12px;border-bottom:1px solid #dbe7e7;background:#eaf4f3}
+.result-panel-primary>span{display:block;color:#6d858c;font-size:7px;font-weight:750;letter-spacing:.65px;text-transform:uppercase}
+.result-panel-primary>strong{display:block;margin:6px 0 3px;color:#176f6c!important;font:750 25px/1.05 'Segoe UI',sans-serif;letter-spacing:-.65px;overflow-wrap:anywhere}
+.result-panel-primary>strong small{color:#668087;font-size:10px;font-weight:600;letter-spacing:0}
+.result-panel-primary>small{display:block;color:#71878e;font-size:7px;line-height:1.4}
+.result-panel-metrics{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:0!important;margin:0!important;padding:0!important}
+.result-panel-metrics>div{display:flex!important;min-width:0;flex-direction:column;gap:4px;padding:10px 11px!important;border:0!important;border-right:1px solid #e2eaeb!important;border-bottom:1px solid #e2eaeb!important;border-radius:0!important;background:#fff!important}
+.result-panel-metrics>div:nth-child(even),.result-panel-metrics>div:last-child{border-right:0!important}
+.result-panel-metrics>div.wide{grid-column:1/-1;border-right:0!important}
+.result-panel-metrics span{display:block!important;margin:0!important;color:#82959b!important;font-size:7px!important;letter-spacing:.15px!important}
+.result-panel-metrics strong{display:block!important;color:#294751!important;font:700 10px/1.25 'Segoe UI',sans-serif!important;overflow-wrap:anywhere}
+.result-panel-metrics strong small{color:#72868d;font-size:7px;font-weight:550}
+.result-panel-metrics small{color:#8b9ba0;font-size:6px;line-height:1.35}
+.result-panel-note{padding:9px 11px;border-top:0;background:#f4f8f7;color:#60777e;font-size:7px;line-height:1.5}
+.result-panel.probe-results{margin-top:12px}
+.result-panel.lorentz-readouts{margin-top:14px;margin-left:13px;margin-right:13px}
+.result-panel.trajectory-readouts{margin-top:5px}
+.result-panel.ohm-result-summary{align-self:stretch}
+
+/* One simulation language: green means an active field, flow or measured motion. */
+:root{
+  --sim-bg:#061914;
+  --sim-bg-deep:#04110e;
+  --sim-grid:#174236;
+  --sim-grid-strong:#235b49;
+  --sim-line:#7f9e93;
+  --sim-green:#56dfa6;
+  --sim-green-bright:#a0f5ce;
+  --sim-green-dim:#2b9b72;
+  --sim-overlay:#08231ccf;
+  --sim-overlay-line:#2b5d4c;
+}
+.electric-canvas-wrap,
+.plate-visual,
+.wired-canvas,
+.relation-circuit,
+.trajectory-visual,
+.field-canvas-shell,
+.lorentz-scene{
+  border-color:var(--sim-overlay-line)!important;
+  background-color:var(--sim-bg)!important;
+  box-shadow:0 12px 28px #0b2c2218!important;
+}
+.wired-canvas,
+.trajectory-visual{
+  background-image:linear-gradient(var(--sim-grid) 1px,transparent 1px),linear-gradient(90deg,var(--sim-grid) 1px,transparent 1px)!important;
+  background-size:22px 22px!important;
+}
+.electric-canvas-wrap{
+  background-image:none!important;
+}
+
+/* Electric field viewer. */
+.electric-canvas>rect:first-of-type{fill:var(--sim-bg)!important}
+#electricGrid path{stroke:var(--sim-grid)!important}
+#electricGrid circle{fill:var(--sim-grid-strong)!important}
+#fieldArrow path{fill:var(--sim-green)!important}
+.electric-canvas path[stroke="#d4dae4"]{stroke:var(--sim-grid-strong)!important}
+.field-flow-halo{stroke:#1d674d!important;opacity:.32!important}
+.field-flow-path{stroke:var(--sim-green)!important;opacity:.82!important;filter:drop-shadow(0 0 2px #56dfa644)}
+.field-direction-arrow,.field-sample-arrow{stroke:var(--sim-green-bright)!important}
+.field-particle{fill:var(--sim-green-bright)!important;stroke:var(--sim-green)!important;filter:drop-shadow(0 0 4px var(--sim-green))!important}
+.field-key{background:var(--sim-green)!important;box-shadow:0 0 0 3px #56dfa61f}
+.spatial-reference-plane polygon{fill:#0d2d24!important;stroke:#2d6753!important}
+.spatial-reference-plane line{stroke:#2b5a4b!important}.spatial-reference-plane line.major{stroke:#4f8c74!important}
+.spatial-reference-plane text{fill:#8fc5b0!important;stroke:var(--sim-bg)!important}
+.electric-canvas-wrap :is(.field-learning-guide,.orbit-hint,.force-legend){border-color:var(--sim-overlay-line)!important;background:var(--sim-overlay)!important;color:#a9c9bd!important;box-shadow:none!important}
+.electric-canvas-wrap .field-learning-guide>span{color:#c7e5da!important}.electric-canvas-wrap .field-learning-guide>small{color:#89aa9e!important}
+.electric-canvas-wrap .field-learning-guide>b{color:var(--sim-green-bright)!important}
+.electric-canvas-wrap .canvas-axis-label{color:#80a99a!important}
+.electric-canvas-wrap .charge-handle>text:last-child{fill:#c6dfd6!important;stroke:var(--sim-bg)!important}
+.probe-handle circle{fill:#0d3b2d!important;stroke:var(--sim-green-bright)!important}.probe-handle path{stroke:var(--sim-green)!important}.probe-handle text{fill:var(--sim-green-bright)!important}
+
+/* Capacitor field: polarity stays red/blue, energy flow becomes green. */
+.capacitor-3d-visual{background:radial-gradient(ellipse at 50% 42%,#12372b 0,var(--sim-bg) 64%,var(--sim-bg-deep) 100%)!important}
+#field-arrow path{fill:var(--sim-green)!important}
+.capacitor-field-ray{stroke:var(--sim-green-bright)!important;stroke-width:var(--field-stroke,1.6)!important;stroke-dasharray:3 7!important;opacity:var(--field-opacity,.9)!important;filter:drop-shadow(0 0 2px #56dfa677)!important;animation:sim-field-flow var(--field-flow-period,1.15s) linear infinite}
+.scene-view-label{fill:#68b996!important}.vacuum-3d-label{fill:#a7c9bc!important}.dielectric-3d-label{fill:#d2e9e1!important;stroke:#12372b!important}
+.dimension-line{stroke:#78aa96!important}.dimension-label-bg{fill:#09231c!important;stroke:#2c604f!important}.dimension-label{fill:#b8d9cd!important}
+
+/* Circuit and Ohm flow. */
+.schematic-wire,.relation-wire{stroke:var(--sim-line)!important}
+.junction-node{fill:var(--sim-green)!important}.canvas-heading>span i{background:var(--sim-green)!important;box-shadow:0 0 0 3px #56dfa61c}
+.total-current-arrow,.relation-current-label path{stroke:var(--sim-green)!important}
+.construction-schematic marker path{fill:var(--sim-green)!important}
+.current-label,.relation-current-label text{fill:var(--sim-green-bright)!important}
+.construction-schematic.is-live .total-current-arrow{stroke-dasharray:7 6;animation:sim-current-flow var(--component-flow-period,.75s) linear infinite;filter:drop-shadow(0 0 2px #56dfa666)}
+.construction-schematic.is-idle .total-current-arrow{stroke:#71877f!important;opacity:.55}
+.junction-node,.relation-charge-flow circle{filter:drop-shadow(0 0 3px #56dfa677)}
+.relation-charge-flow circle{fill:var(--sim-green)!important;stroke:#d7f8e9!important}
+.relation-circuit-heading{border-color:var(--sim-overlay-line)!important;background:var(--sim-overlay)!important}
+.relation-circuit-heading>div{color:var(--sim-green)!important}.relation-circuit-heading>div b{color:#d1e7df!important}.relation-circuit-heading>div small{color:#82a69a!important}
+.flow-state.high,.flow-state.medium,.flow-state.low{background:#12372b!important;color:var(--sim-green-bright)!important}
+.relation-control output{color:#177a5a!important}.relation-control input{background:linear-gradient(90deg,#3ca77c var(--progress),#dbe5e1 var(--progress))!important}
+.relation-control input::-webkit-slider-thumb{border-color:#2d936d!important}.gauge-heading>span{background:#e7f4ef!important;color:#238263!important}
+.gauge-fill,.variable-gauge.current .gauge-fill{background:linear-gradient(#86e6bd,#31976f)!important}
+
+/* Particle trajectory uses the same green active state. */
+.trajectory-visual>svg>rect{fill:var(--sim-bg)!important}
+#trajectoryGrid circle{fill:var(--sim-grid-strong)!important}
+#trajectoryVelocityArrow path{fill:var(--sim-green)!important}
+.trajectory-visual svg path[stroke="#e6c7aa"]{stroke:#527c6c!important;opacity:.55}
+.trajectory-visual svg path[stroke="#df8b48"]{stroke:var(--sim-green)!important;stroke-dasharray:8 6;animation:sim-current-flow .9s linear infinite;filter:drop-shadow(0 0 2px #56dfa655)}
+.trajectory-visual svg circle[fill="#df8b48"]{fill:var(--sim-green)!important;filter:drop-shadow(0 0 5px #56dfa699)}
+.trajectory-visual svg circle[fill="#df8b4833"]{fill:#56dfa633!important}
+.trajectory-visual svg circle[fill="#49896c"]{fill:var(--sim-green)!important}
+.trajectory-legend,.trajectory-finish{border-color:var(--sim-overlay-line)!important;background:var(--sim-overlay)!important;color:#a8c8bc!important}
+.trajectory-legend .path-key{background:var(--sim-green)!important}.trajectory-legend .velocity-key{background:#80ecc0!important}
+.trajectory-empty{color:#8cb2a4!important}.trajectory-chart-card{border-color:#d3e1dc!important}
+
+/* Magnetic canvases already animate; align their signal color with the system. */
+.field-flow-glow{stroke:#2bb77f!important}.field-flow-line{stroke:var(--sim-green)!important}.field-flow-pulse{stroke:var(--sim-green-bright)!important}
+.field-vector-map{stroke:#61c89f!important}.scene-live-indicator i{background:var(--sim-green)!important;box-shadow:0 0 0 4px #56dfa61a,0 0 12px #56dfa6!important}
+.lorentz-scene .particle-path{stroke:var(--sim-green)!important}.lorentz-scene .particle-trail{fill:var(--sim-green)!important}.lorentz-scene .particle-pulse{stroke:var(--sim-green)!important}
+
+@keyframes sim-field-flow{to{stroke-dashoffset:-20}}
+@keyframes sim-current-flow{to{stroke-dashoffset:-26}}
+
+@media(max-width:760px){
+  .experiment-access{grid-template-columns:1fr}
+  .experiment-access-heading{display:none}
+  .experiment-access-list{overflow-x:auto}
+}
+@media(max-width:520px){
+  .experiment-access-list{grid-template-columns:repeat(2,minmax(175px,1fr));padding:5px}
+  .experiment-access-list button{min-height:56px;padding:7px 9px;gap:7px}
+  .experiment-access-copy small{white-space:normal}
+  .circuit-context{display:none}
+}
+@media(max-width:420px){
+  .result-panel-metrics{grid-template-columns:1fr}
+  .result-panel-metrics>div{grid-column:1!important;border-right:0!important}
+}
+
 /* Responsive transformation */
 @media(max-width:1200px){
   .unit-rack .module-card{grid-template-columns:100px minmax(220px,1fr) minmax(240px,.9fr) 150px}.module-formula{display:none}
@@ -99,4 +385,237 @@ body{background:var(--nx-bg);color:var(--nx-ink)}
 @media(max-width:520px){
   .sidebar{width:58px;padding:15px 5px}.brand-mark{width:34px;height:34px}.sidebar .nav-link{grid-template-columns:19px;height:44px}.sidebar .nav-link>svg,.nav-code{display:none}.sidebar .nav-link:after{content:attr(aria-label);display:none}.main-area{margin-left:58px;padding:0 9px 20px}.engine-status{display:none!important}.command-deck .lab-overview-copy{padding:23px 20px}.command-deck .lab-overview-copy h1{font-size:22px}.command-actions{align-items:flex-start;flex-direction:column}.unit-section-title{align-items:flex-start}.module-count{display:none}.unit-rack .module-card{grid-template-columns:64px 1fr 42px}.unit-rack .module-card-top{padding:11px}.unit-rack .module-card-bottom{padding:0;border-left:1px solid #e0e7e7}.unit-rack .module-card-bottom>span:not(.card-arrow){display:none}.unit-rack .card-arrow{position:static;margin:auto}.unit-rack .module-card h3{font-size:12px}.unit-rack .module-card p{display:none}.module-heading{margin-top:10px}.module-heading h1{font-size:20px}.simulation-card--instrument>.card-topline{height:62px;padding:0 11px}.station-title h2{font-size:11px}.simulation-card--instrument .fullscreen-button{font-size:0;padding:7px}.module-tools-nav{overflow:auto}.module-tools-nav button{min-width:max-content}.electric-toolbar,.capacitor-toolbar,.circuit-toolbar{align-items:flex-start!important;flex-direction:column!important}.viewer-actions,.capacitor-toolbar-actions{width:100%;overflow:auto}.electric-workspace,.plate-lab-layout,.wired-builder,.ohm-explorer{padding:7px!important}.electric-canvas{min-height:340px!important}.plate-visual{height:340px!important;min-height:340px!important}.wired-canvas{height:360px!important}
 }
-@media(prefers-reduced-motion:reduce){.unit-rack .module-card,.sidebar .nav-link,.command-actions button{transition:none}.unit-rack .module-card:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){
+  .unit-rack .module-card,.sidebar .nav-link,.command-actions button{transition:none}
+  .unit-rack .module-card:hover{transform:none}
+  .capacitor-field-ray,.construction-schematic.is-live .total-current-arrow,.trajectory-visual svg path[stroke="#df8b48"]{animation:none}
+}
+
+/* Reduced interface hierarchy: name, simulator, controls and results. */
+.sidebar .nav-link{grid-template-columns:19px minmax(0,1fr) 6px;height:48px}
+.sidebar .module-nav .nav-link{grid-template-columns:19px minmax(0,1fr)}
+.nav-copy{justify-content:center;gap:0}.nav-copy strong{font-size:10px}
+.home-console{display:flex;flex-direction:column;justify-content:center;padding:42px 0 64px}
+.unit-section-title{margin:0 0 18px}.unit-section-title h1{margin:0;color:#193a44;font-size:25px}
+.unit-rack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.unit-rack .module-card{display:grid;grid-template-columns:72px minmax(0,1fr) 48px;min-height:112px;padding:0;border-radius:10px;background:linear-gradient(135deg,#fff,#f7faf9)}
+.unit-rack .module-card-top{display:grid;place-items:center;padding:0;border:0;background:transparent}
+.unit-rack .module-card .module-icon{grid-column:auto;grid-row:auto;width:40px;height:40px}
+.unit-rack .module-card-body{display:flex;align-items:center;padding:20px}.unit-rack .module-card h3{margin:0;font-size:15px;line-height:1.3}
+.unit-rack .module-card-bottom{grid-column:3;align-self:stretch;align-items:center;justify-content:center;padding:0;border:0;background:transparent}
+.unit-rack .card-arrow{position:static;margin:0}
+.unit-rack .module-card:hover .card-arrow{transform:translateX(3px)}
+.module-page--instrument{padding-top:20px}.module-heading{display:block;margin:13px 0 15px}.module-heading h1{margin:0;font-size:26px}
+.simulation-card--instrument>.card-topline{height:58px}.station-title h2{margin:0;font-size:14px}.station-title{gap:0}
+.experiment-access{display:block;min-height:54px}.experiment-access-list{padding:0 14px}.experiment-access-list button{grid-template-columns:minmax(0,1fr);min-height:54px;padding:8px 14px;text-align:center}
+.experiment-access-copy{display:block}.experiment-access-copy strong{font-size:9px}
+.workbench-header{min-height:58px!important}.workbench-header h3{margin:0!important}
+.capacitor-toolbar{justify-content:flex-end!important;min-height:48px}
+
+@media(max-width:700px){.home-console{justify-content:flex-start;padding-top:28px}.unit-rack{gap:9px}.unit-rack .module-card{grid-template-columns:58px minmax(0,1fr) 38px;min-height:92px}.unit-rack .module-card .module-icon{width:35px;height:35px}.unit-rack .module-card-body{padding:14px}.unit-rack .module-card h3{font-size:12px}}
+@media(max-width:480px){.unit-rack{grid-template-columns:1fr}.unit-rack .module-card{min-height:76px}.module-heading h1{font-size:21px}.experiment-access-list{overflow-x:auto}.experiment-access-list button{min-width:145px}}
+
+/* Professional workbench: hierarchy through space and dividers, not nested cards. */
+.module-heading--lab{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:28px;
+  margin:12px 0 22px;
+}
+.module-heading--lab>div{max-width:760px}
+.module-heading--lab .module-heading-kicker{
+  display:block;
+  margin-bottom:7px;
+  color:#218f8b;
+  font-size:7px;
+  font-weight:800;
+  letter-spacing:1.45px;
+}
+.module-heading--lab h1{margin:0 0 7px;font-size:30px;letter-spacing:-1px}
+.module-heading--lab p{max-width:680px;margin:0;color:#70858d;font-size:10px;line-height:1.55}
+.module-fullscreen{flex:none;min-height:37px;padding:0 13px!important;border-color:#c4d7d8!important;background:transparent!important}
+
+.simulation-card--instrument{
+  overflow:visible;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.simulation-card--instrument>.fullscreen-only-header{display:none}
+.simulation-card--instrument>:is(.electric-lab,.capacitor-lab,.circuit-lab,.magnetic-lab){background:transparent!important}
+
+/* Navigation reads as a section switcher, not a card inside a card. */
+.module-tools-nav{
+  min-height:48px;
+  padding:0!important;
+  border-top:1px solid #cedddd!important;
+  border-bottom:1px solid #cedddd!important;
+  background:transparent!important;
+}
+.module-tools-nav button{
+  min-height:48px!important;
+  padding:0 21px!important;
+  border:0!important;
+  background:transparent!important;
+}
+.module-tools-nav button:first-child{padding-left:3px!important}
+.module-tools-nav button.active:after{right:16px;left:16px;height:3px}
+.module-tools-nav button:first-child.active:after{left:3px}
+
+/* Toolbars float in the workbench and use restrained separators. */
+.simulation-card--instrument :is(.electric-toolbar,.capacitor-toolbar,.circuit-toolbar){
+  min-height:64px!important;
+  padding:9px 0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.scenario-picker>span{margin-right:7px;color:#688087!important}
+.scenario-case-list{gap:0!important;padding:0!important;border-bottom:1px solid #d1dede}
+.scenario-case-list button{
+  min-width:auto!important;
+  min-height:39px;
+  grid-template-columns:auto 1fr!important;
+  gap:6px!important;
+  padding:4px 12px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.scenario-case-list button b{height:auto!important;background:transparent!important;color:#648089!important}
+.scenario-case-list button.active{color:#176f6c!important;background:transparent!important;box-shadow:inset 0 -3px #218f8b!important}
+.scenario-case-list button.active b{color:#176f6c!important}
+.viewer-actions :is(.dimension-switch,.zoom-actions){border-radius:5px}
+.center-view-button,.reset-button{background:transparent!important}
+
+/* The canvas and controls form one two-column instrument surface. */
+.electric-workspace{
+  grid-template-columns:minmax(0,1fr) minmax(285px,310px)!important;
+  gap:24px!important;
+  padding:4px 0 0!important;
+}
+.electric-canvas-wrap{border-radius:4px!important;box-shadow:0 18px 42px #0b2c2220!important}
+.electric-options{padding:12px 0 0!important}
+.electric-options button{
+  min-height:30px!important;
+  padding:5px 9px!important;
+  border-color:transparent!important;
+  background:transparent!important;
+}
+.electric-options button:hover{background:#e7f0ef!important}
+.electric-options button.toggle-on{border-color:transparent!important;background:#dfeeed!important}
+
+.electric-control-panel{
+  padding:0 0 0 21px!important;
+  border:0!important;
+  border-left:1px solid #cadbdc!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.electric-control-panel>.charge-panel-heading{padding:4px 0 11px;border-bottom:1px solid #d7e3e3}
+.charge-editors{display:block!important;padding:0 0 7px!important}
+.charge-editor{
+  margin:0!important;
+  padding:11px 0!important;
+  border:0!important;
+  border-bottom:1px solid #dbe5e5!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.charge-editor :is(input,select),.probe-coordinate-inputs input{
+  border-color:#cddbdc!important;
+  border-radius:4px!important;
+  background:#fff!important;
+}
+.charge-editor{
+  grid-template-columns:7px auto 44px minmax(54px,1fr) 62px!important;
+}
+.charge-editor select{
+  width:100%!important;
+  min-width:0!important;
+  height:31px!important;
+  padding:0 18px 0 7px!important;
+  background-color:#fff!important;
+  background-image:linear-gradient(45deg,transparent 50%,#607981 50%),linear-gradient(135deg,#607981 50%,transparent 50%)!important;
+  background-position:calc(100% - 10px) 50%,calc(100% - 7px) 50%!important;
+  background-size:3px 3px,3px 3px!important;
+  background-repeat:no-repeat!important;
+  color:#294751!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  text-align:left;
+}
+.charge-editor select:first-of-type{text-align:center;padding-left:4px!important}
+.charge-position-fields{padding-top:8px!important}
+.probe-editor{
+  margin:14px 0 0!important;
+  padding:14px 0!important;
+  border:0!important;
+  border-top:1px solid #afc9c9!important;
+  border-bottom:1px solid #d7e3e3!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.inline-view-button{background:transparent!important}
+
+/* Results remain a single coherent readout; inner values are no longer cards. */
+.electric-control-panel .result-panel{
+  margin-top:14px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.electric-control-panel .result-panel-header{padding:8px 0;border-top:1px solid #a8c4c4;border-bottom:1px solid #d5e2e2;background:transparent}
+.electric-control-panel .result-panel-primary{padding:15px 0 13px;border-bottom:1px solid #dbe5e5;background:transparent}
+.electric-control-panel .result-panel-primary>strong{font-size:27px}
+.electric-control-panel .result-panel-metrics{grid-template-columns:1fr 1fr}
+.electric-control-panel .result-panel-metrics>div{
+  padding:10px 10px 10px 0!important;
+  border:0!important;
+  border-bottom:1px solid #e0e8e8!important;
+  background:transparent!important;
+}
+.electric-control-panel .result-panel-metrics>div:nth-child(even){padding-left:10px!important;border-left:1px solid #e0e8e8!important}
+.electric-control-panel .result-panel-metrics>div.wide{padding-left:0!important;border-left:0!important}
+.electric-control-panel .result-panel-note{padding:10px 0;background:transparent}
+
+/* Explanations become an editorial strip below the simulation. */
+.didactic-case{
+  margin-top:14px;
+  border:0!important;
+  border-top:1px solid #c9dada!important;
+  border-bottom:1px solid #d6e2e2!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.didactic-case>div{padding:13px 15px!important}
+.didactic-case>div:first-child{padding-left:0!important}
+.didactic-case>div+div{border-left:1px solid #dbe5e5!important}
+.didactic-case-index,.didactic-observation{background:transparent!important}
+.didactic-case-index strong{color:#176f6c!important}
+
+/* Apply the same flatter surface language to the other stations. */
+:is(.plate-side-column,.wired-side-panel,.magnetic-panel,.lorentz-panel,.trajectory-controls)>*{box-shadow:none!important}
+:is(.plate-control-panel,.plate-condition-card,.plate-results-card,.dielectric-detail,.wired-source-card,.wired-results-card,.camera-navigation-panel,.magnetic-panel,.lorentz-panel,.earth-mag-panel,.trajectory-controls){border-radius:5px!important}
+
+.simulation-card:fullscreen,.simulation-card.is-fullscreen{padding:0 24px 24px;background:#eef3f2!important}
+.simulation-card:fullscreen>.fullscreen-only-header,.simulation-card.is-fullscreen>.fullscreen-only-header{display:flex!important;margin:0 -24px 0;padding:0 24px!important}
+
+@media(max-width:980px){
+  .electric-workspace{gap:16px!important}
+  .electric-control-panel{padding:18px 0 0!important;border-top:1px solid #cadbdc!important;border-left:0!important}
+}
+@media(max-width:700px){
+  .module-heading--lab{align-items:flex-start;margin-bottom:16px}
+  .module-heading--lab h1{font-size:24px}
+  .module-heading--lab p{display:block;font-size:9px}
+  .module-fullscreen{font-size:0}
+  .scenario-picker{width:100%;align-items:flex-start!important;flex-direction:column}
+  .scenario-case-list{width:100%;overflow-x:auto}
+  .viewer-actions{width:100%}
+  .didactic-case{grid-template-columns:1fr!important}
+  .didactic-case>div{padding-left:0!important}
+  .didactic-case>div+div{border-top:1px solid #dbe5e5!important;border-left:0!important}
+}

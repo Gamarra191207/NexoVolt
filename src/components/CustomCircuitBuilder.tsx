@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import {
-  Activity, BatteryCharging, CirclePower, GitBranch, Lamp,
-  Plus, Power, RotateCcw, Trash2, Unplug, Zap,
+  BatteryCharging, GitBranch, Lightbulb, Plus, RotateCcw,
+  ToggleRight, Trash2,
 } from 'lucide-react'
 import {
   solveConstructedCircuit,
@@ -10,6 +10,7 @@ import {
   type CustomComponentKind,
 } from '../physics/circuits'
 import NumericInput from './NumericInput'
+import ResultPanel from './ResultPanel'
 import './custom-circuit-builder.css'
 
 type Draft = Omit<CustomCircuitComponent, 'id'>
@@ -46,23 +47,48 @@ const branchFrom = (drafts: Draft[]): CustomCircuitBranch => ({ id: id('branch')
 const instantiate = (template: Template) => ({ series: template.series.map(componentFrom), branches: template.branches.map(branchFrom) })
 const format = (value: number, decimals = 2) => Number.isFinite(value) ? value.toFixed(decimals) : '∞'
 
+function componentAnimationStyle(current: number, resistance = 0) {
+  const amps = Number.isFinite(current) ? Math.abs(current) : 0
+  const power = amps ** 2 * Math.max(0, resistance)
+  const energyLevel = power / (power + 4)
+  return {
+    '--component-flow-period': `${amps > .0001 ? Math.max(.35, Math.min(3.2, 1.2 / amps)) : 3.2}s`,
+    '--component-glow': (0.12 + energyLevel * 0.5).toFixed(3),
+  } as CSSProperties
+}
+
 function MiniDiagram({ template }: { template: Template }) {
   return <span className="wire-template-icon"><i className="wire-template-top">{template.series.map((component, index) => <b className={component.kind} key={index} />)}</i>{template.branches.map((branch, branchIndex) => <i className="wire-template-branch" key={branchIndex}>{branch.map((component, index) => <b className={component.kind} key={index} />)}</i>)}</span>
 }
 
-function SchematicSymbol({ component, vertical = false }: { component: CustomCircuitComponent; vertical?: boolean }) {
-  if (component.kind === 'lamp') return <g className="svg-lamp"><circle cx="0" cy="0" r="17" /><path d="M-10-10 10 10M10-10-10 10" /></g>
-  if (component.kind === 'switch') return <g className={`svg-switch ${component.closed ? 'closed' : 'open'}`}><circle cx={vertical ? 0 : -20} cy={vertical ? -20 : 0} r="3" /><circle cx={vertical ? 0 : 20} cy={vertical ? 20 : 0} r="3" /><path d={vertical ? `M0-20 ${component.closed ? 0 : 12} 20` : `M-20 0 ${component.closed ? 20 : 16}-10`} /></g>
-  return vertical
-    ? <path className="svg-resistor" d="M0-27v7l-9 7 18 10-18 10 18 10-9 7v3" />
-    : <path className="svg-resistor" d="M-34 0h8l7-9 10 18L1-9l10 18L21-9l7 9h6" />
+function SchematicSymbol({ component, vertical = false, energized = false }: { component: CustomCircuitComponent; vertical?: boolean; energized?: boolean }) {
+  if (component.kind === 'lamp') return <g className={`svg-lamp ${energized ? 'is-on' : 'is-off'}`}>
+    <circle className="lamp-glow" cx="0" cy="0" r="23" />
+    <circle className="lamp-bulb" cx="0" cy="0" r="17" />
+    <path className="lamp-filament" d="M-10-10 10 10M10-10-10 10" />
+    <path className="lamp-rays" d="M0-22v-4M22 0h4M0 22v4M-22 0h-4" />
+  </g>
+  if (component.kind === 'switch') return <g className={`svg-switch ${component.closed ? 'closed' : 'open'} ${energized ? 'is-energized' : ''}`}>
+    <circle className="switch-contact" cx={vertical ? 0 : -20} cy={vertical ? -20 : 0} r="4" />
+    <circle className="switch-contact" cx={vertical ? 0 : 20} cy={vertical ? 20 : 0} r="4" />
+    <path className="switch-lever" d={vertical
+      ? (component.closed ? 'M0-20V20' : 'M0-20L12 14')
+      : (component.closed ? 'M-20 0H20' : 'M-20 0L14-12')
+    } />
+  </g>
+  return <g className={`svg-resistor ${vertical ? 'vertical' : 'horizontal'} ${energized ? 'is-energized' : 'is-idle'}`}>
+    <path className="resistor-symbol" d={vertical ? 'M0-28v7l-9 6 18 10-18 10 18 10-9 6v7' : 'M-28 0h7l6-9 10 18L5-9l10 18 6-9h7'} />
+    <circle className="resistor-terminal" cx={vertical ? 0 : -28} cy={vertical ? -28 : 0} r="2.5" />
+    <circle className="resistor-terminal" cx={vertical ? 0 : 28} cy={vertical ? 28 : 0} r="2.5" />
+  </g>
 }
 
-function CircuitSchematic({ series, branches, selection, onSelect, totalCurrent, branchCurrents }: {
+function CircuitSchematic({ series, branches, selection, onSelect, voltage, totalCurrent, branchCurrents }: {
   series: CustomCircuitComponent[]
   branches: CustomCircuitBranch[]
   selection: Selection | null
   onSelect: (selection: Selection) => void
+  voltage: number
   totalCurrent: number
   branchCurrents: number[]
 }) {
@@ -73,20 +99,21 @@ function CircuitSchematic({ series, branches, selection, onSelect, totalCurrent,
   const isBlank = series.length === 0 && branches.length === 0
   const activate = (event: KeyboardEvent<SVGGElement>, next: Selection) => { if (event.key === 'Enter' || event.key === ' ') onSelect(next) }
 
-  return <svg className="construction-schematic" viewBox="0 0 780 410" role="img" aria-label="Diagrama del circuito construido">
+  return <svg className={`construction-schematic ${Number.isFinite(totalCurrent) && totalCurrent > .0001 ? 'is-live' : 'is-idle'}`} style={componentAnimationStyle(totalCurrent)} viewBox="0 0 780 410" role="img" aria-label="Diagrama del circuito construido">
     <defs><marker id="current-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 8 4 0 8" /></marker></defs>
-    <path className="schematic-wire" d={`M${left} 155V${top}H${seriesCenters[0] ? seriesCenters[0] - 40 : isBlank ? split - 30 : split}`} />
+    <path className="schematic-wire" d={`M${left} 173V${top}H${seriesCenters[0] ? seriesCenters[0] - 32 : isBlank ? split - 30 : split}`} />
     {series.map((component, index) => {
       const center = seriesCenters[index]
       const selected = selection?.area === 'series' && selection.componentId === component.id
-      const nextStart = index === series.length - 1 ? split : seriesCenters[index + 1] - 40
+      const energized = Number.isFinite(totalCurrent) && totalCurrent > .0001
+      const nextStart = index === series.length - 1 ? split : seriesCenters[index + 1] - 32
       return <g key={component.id}>
-        <g className={`schematic-component horizontal ${component.kind} ${selected ? 'selected' : ''}`} role="button" tabIndex={0} onClick={() => onSelect({ area: 'series', componentId: component.id })} onKeyDown={(event) => activate(event, { area: 'series', componentId: component.id })} transform={`translate(${center} ${top})`}><rect x="-40" y="-27" width="80" height="54" rx="9" /><SchematicSymbol component={component} /><text y="-36" textAnchor="middle">{component.label} · {component.kind === 'switch' ? (component.closed ? 'cerrado' : 'abierto') : `${component.resistance} Ω`}</text></g>
-        <path className="schematic-wire" d={`M${center + 40} ${top}H${nextStart}`} />
+        <g className={`schematic-component horizontal ${component.kind} ${energized ? 'energized' : 'deenergized'} ${selected ? 'selected' : ''}`} style={componentAnimationStyle(totalCurrent, component.resistance)} role="button" tabIndex={0} onClick={() => onSelect({ area: 'series', componentId: component.id })} onKeyDown={(event) => activate(event, { area: 'series', componentId: component.id })} transform={`translate(${center} ${top})`}><rect x="-32" y="-32" width="64" height="64" rx="8" /><SchematicSymbol component={component} energized={energized} /><text y="-41" textAnchor="middle">{component.label} · {component.kind === 'switch' ? (component.closed ? 'cerrado' : 'abierto') : `${component.resistance} Ω`}</text></g>
+        <path className="schematic-wire" d={`M${center + 32} ${top}H${nextStart}`} />
       </g>
     })}
-    <path className="schematic-wire" d={`M${isBlank ? split + 30 : split} ${top}H${right}V${bottom}H${left}V255`} />
-    <g className="schematic-battery" transform={`translate(${left} 205)`}><rect x="-18" y="-50" width="36" height="100" rx="10" /><line x1="-9" y1="-13" x2="9" y2="-13" /><line x1="0" y1="-22" x2="0" y2="-4" /><line x1="-8" y1="20" x2="8" y2="20" /><text x="-29" y="4" textAnchor="end">Fuente</text></g>
+    <path className="schematic-wire" d={`M${isBlank ? split + 30 : split} ${top}H${right}V${bottom}H${left}V237`} />
+    <g className="schematic-battery circuit-style-source" transform={`translate(${left} 205)`}><rect x="-32" y="-32" width="64" height="64" rx="8" /><circle className="source-terminal" cx="0" cy="-32" r="2.5" /><circle className="source-terminal" cx="0" cy="32" r="2.5" /><path className="source-positive" d="M-10-10H10M0-20V0" /><path className="source-negative" d="M-10 16H10" /><text x="-42" y="4" textAnchor="end">Fuente</text><text className="source-voltage" x="0" y="49" textAnchor="middle">{voltage} V</text></g>
     <path className="total-current-arrow" d={`M110 ${top - 38}H165`} markerEnd="url(#current-arrow)" /><text className="current-label" x="137" y={top - 48} textAnchor="middle">I total · {format(totalCurrent, 3)} A</text>
     {isBlank ? <g className="blank-circuit-gap"><circle cx={split - 30} cy={top} r="4" /><circle cx={split + 30} cy={top} r="4" /><text x={split} y={top + 28} textAnchor="middle">Añade un componente</text></g> : <><circle className="junction-node" cx={split} cy={top} r="5" /><circle className="junction-node" cx={split} cy={bottom} r="5" /></>}
 
@@ -95,16 +122,17 @@ function CircuitSchematic({ series, branches, selection, onSelect, totalCurrent,
       const count = branch.components.length
       const centers = branch.components.map((_, index) => top + ((bottom - top) * (index + 1)) / (count + 1))
       return <g key={branch.id}>
-        {count === 0 ? <g className="empty-branch-gap"><path className="schematic-wire branch-wire-svg inactive" d={`M${x} ${top}V${top + 75}M${x} ${bottom - 75}V${bottom}`} /><circle cx={x} cy={top + 75} r="4" /><circle cx={x} cy={bottom - 75} r="4" /><text x={x + 12} y={(top + bottom) / 2}>Rama vacía</text></g> : <path className={`schematic-wire branch-wire-svg ${branchCurrents[branchIndex] === 0 ? 'inactive' : ''}`} d={`M${x} ${top}V${centers[0] - 36}`} />}
+        {count === 0 ? <g className="empty-branch-gap"><path className="schematic-wire branch-wire-svg inactive" d={`M${x} ${top}V${top + 75}M${x} ${bottom - 75}V${bottom}`} /><circle cx={x} cy={top + 75} r="4" /><circle cx={x} cy={bottom - 75} r="4" /><text x={x + 12} y={(top + bottom) / 2}>Rama vacía</text></g> : <path className={`schematic-wire branch-wire-svg ${branchCurrents[branchIndex] === 0 ? 'inactive' : ''}`} d={`M${x} ${top}V${centers[0] - 32}`} />}
         <circle className="junction-node" cx={x} cy={top} r="5" /><circle className="junction-node" cx={x} cy={bottom} r="5" />
         {branch.components.map((component, componentIndex) => {
           const y = centers[componentIndex]
           const selected = selection?.area === 'branch' && selection.branchId === branch.id && selection.componentId === component.id
-          const next = componentIndex === count - 1 ? bottom : centers[componentIndex + 1] - 36
+          const energized = Number.isFinite(branchCurrents[branchIndex]) && branchCurrents[branchIndex] > .0001
+          const next = componentIndex === count - 1 ? bottom : centers[componentIndex + 1] - 32
           const nextSelection: Selection = { area: 'branch', branchId: branch.id, componentId: component.id }
           return <g key={component.id}>
-            <g className={`schematic-component vertical ${component.kind} ${selected ? 'selected' : ''}`} role="button" tabIndex={0} onClick={() => onSelect(nextSelection)} onKeyDown={(event) => activate(event, nextSelection)} transform={`translate(${x} ${y})`}><rect x="-29" y="-36" width="58" height="72" rx="9" /><SchematicSymbol component={component} vertical /><text transform="translate(42 0) rotate(90)" textAnchor="middle">{component.label} · {component.kind === 'switch' ? (component.closed ? 'cerrado' : 'abierto') : `${component.resistance} Ω`}</text></g>
-            <path className={`schematic-wire branch-wire-svg ${branchCurrents[branchIndex] === 0 ? 'inactive' : ''}`} d={`M${x} ${y + 36}V${next}`} />
+            <g className={`schematic-component vertical ${component.kind} ${energized ? 'energized' : 'deenergized'} ${selected ? 'selected' : ''}`} style={componentAnimationStyle(branchCurrents[branchIndex], component.resistance)} role="button" tabIndex={0} onClick={() => onSelect(nextSelection)} onKeyDown={(event) => activate(event, nextSelection)} transform={`translate(${x} ${y})`}><rect x="-32" y="-32" width="64" height="64" rx="8" /><SchematicSymbol component={component} vertical energized={energized} /><text transform="translate(42 0) rotate(90)" textAnchor="middle">{component.label} · {component.kind === 'switch' ? (component.closed ? 'cerrado' : 'abierto') : `${component.resistance} Ω`}</text></g>
+            <path className={`schematic-wire branch-wire-svg ${branchCurrents[branchIndex] === 0 ? 'inactive' : ''}`} d={`M${x} ${y + 32}V${next}`} />
           </g>
         })}
         <text className="branch-current-label" x={x} y={bottom + 25} textAnchor="middle">I{branchIndex + 1} · {format(branchCurrents[branchIndex], 3)} A</text>
@@ -127,6 +155,8 @@ export default function CustomCircuitBuilder() {
   const selectedComponent = selection?.area === 'series'
     ? series.find((component) => component.id === selection.componentId)
     : branches.find((branch) => branch.id === selection?.branchId)?.components.find((component) => component.id === selection?.componentId)
+  const selectedBranchIndex = selection?.area === 'branch' ? branches.findIndex((branch) => branch.id === selection.branchId) : -1
+  const selectedCurrent = selection?.area === 'series' ? results.totalCurrent : (results.branches[selectedBranchIndex]?.current ?? 0)
   const targetFull = target === 'series'
     ? series.length >= 3
     : (branches.find((branch) => branch.id === target)?.components.length ?? 3) >= 3
@@ -182,14 +212,27 @@ export default function CustomCircuitBuilder() {
 
     <div className="wired-layout">
       <section className="wired-main-panel">
-        <header className="wired-toolbar"><div><strong>Agregar componente en</strong><select value={target} onChange={(event) => setTarget(event.target.value)}><option value="series">Línea principal (serie)</option>{branches.map((branch, index) => <option value={branch.id} key={branch.id}>Rama {index + 1} (paralelo)</option>)}</select></div><span className="toolbar-divider" /><button disabled={targetFull} onClick={() => addComponent('resistor')}><span className="toolbar-resistor">/\/\/</span>Resistencia</button><button disabled={targetFull} onClick={() => addComponent('lamp')}><Lamp size={14} />Foco</button><button disabled={targetFull} onClick={() => addComponent('switch')}><Power size={14} />Interruptor</button><button className="toolbar-new" onClick={() => loadTemplate(templates[0])}><RotateCcw size={13} />Nuevo</button></header>
-        <div className="wired-canvas"><div className="canvas-heading"><span><i />DIAGRAMA DEL CIRCUITO</span></div><CircuitSchematic series={series} branches={branches} selection={selection} onSelect={setSelection} totalCurrent={results.totalCurrent} branchCurrents={results.branches.map((branch) => branch.current)} /><div className="canvas-legend"><span><i className="wire-sample" />Conductor</span><span><i className="node-sample" />Nodo</span><span><i className="current-sample" />Corriente</span></div></div>
+        <header className="wired-toolbar"><div><strong>Agregar componente en</strong><select value={target} onChange={(event) => setTarget(event.target.value)}><option value="series">Línea principal (serie)</option>{branches.map((branch, index) => <option value={branch.id} key={branch.id}>Rama {index + 1} (paralelo)</option>)}</select></div><span className="toolbar-divider" /><button className="component-tool resistor-tool" disabled={targetFull} onClick={() => addComponent('resistor')}><span className="toolbar-resistor">/\/\/</span>Resistencia</button><button className="component-tool lamp-tool" disabled={targetFull} onClick={() => addComponent('lamp')}><Lightbulb size={14} />Foco</button><button className="component-tool switch-tool" disabled={targetFull} onClick={() => addComponent('switch')}><ToggleRight size={14} />Interruptor</button><button className="toolbar-new" onClick={() => loadTemplate(templates[0])}><RotateCcw size={13} />Nuevo</button></header>
+        <div className="wired-canvas"><div className="canvas-heading"><span><i />DIAGRAMA DEL CIRCUITO</span></div><CircuitSchematic series={series} branches={branches} selection={selection} onSelect={setSelection} voltage={voltage} totalCurrent={results.totalCurrent} branchCurrents={results.branches.map((branch) => branch.current)} /><div className="canvas-legend"><span><i className="wire-sample" />Conductor</span><span><i className="node-sample" />Nodo</span><span><i className="current-sample" />Corriente</span></div></div>
         <div className="branch-management"><div><GitBranch size={14} /><span><strong>Ramas en paralelo</strong><small>Cada rama conecta el nodo superior con el retorno</small></span></div><div className="branch-chips">{branches.map((branch, index) => <span key={branch.id}>Rama {index + 1}<button aria-label={`Eliminar rama ${index + 1}`} onClick={() => removeBranch(branch.id)}>×</button></span>)}<button onClick={addBranch} disabled={branches.length >= 4}><Plus size={12} />Añadir rama</button></div></div>
 
-        {selectedComponent && selection && <section className="component-inspector"><div className={`inspector-icon ${selectedComponent.kind}`}>{selectedComponent.kind === 'lamp' ? <Lamp size={17} /> : selectedComponent.kind === 'switch' ? (selectedComponent.closed ? <Power size={17} /> : <Unplug size={17} />) : <span>/\/\/</span>}</div><div className="inspector-heading"><span>COMPONENTE SELECCIONADO</span><strong>{selectedComponent.label}</strong></div>{selectedComponent.kind === 'switch' ? <button className={`inspector-switch ${selectedComponent.closed ? 'closed' : ''}`} onClick={() => updateSelected({ closed: !selectedComponent.closed })}>{selectedComponent.closed ? 'Cerrado · circula corriente' : 'Abierto · interrumpe corriente'}</button> : <label className="inspector-value"><span>Resistencia</span><div><NumericInput min={1} max={500} value={selectedComponent.resistance} onValueChange={(resistance) => updateSelected({ resistance })} /><em>Ω</em></div></label>}<label className="inspector-move"><span>Ubicación</span><select value={selection.area === 'series' ? 'series' : selection.branchId} onChange={(event) => moveSelected(event.target.value)}><option value="series">Línea principal</option>{branches.map((branch, index) => <option value={branch.id} key={branch.id}>Rama {index + 1}</option>)}</select></label><button className="inspector-delete" onClick={removeSelected}><Trash2 size={13} />Eliminar</button></section>}
+        {selectedComponent && selection && <section className="component-inspector"><div className={`inspector-icon ${selectedComponent.kind}`}><svg viewBox="-38 -30 76 60" style={componentAnimationStyle(selectedCurrent, selectedComponent.resistance)} aria-hidden="true"><SchematicSymbol component={selectedComponent} energized={Number.isFinite(selectedCurrent) && selectedCurrent > .0001} /></svg></div><div className="inspector-heading"><span>COMPONENTE SELECCIONADO</span><strong>{selectedComponent.label}</strong></div>{selectedComponent.kind === 'switch' ? <button className={`inspector-switch ${selectedComponent.closed ? 'closed' : ''}`} onClick={() => updateSelected({ closed: !selectedComponent.closed })}>{selectedComponent.closed ? 'Cerrado · circula corriente' : 'Abierto · interrumpe corriente'}</button> : <label className="inspector-value"><span>Resistencia</span><div><NumericInput min={1} max={500} value={selectedComponent.resistance} onValueChange={(resistance) => updateSelected({ resistance })} /><em>Ω</em></div></label>}<label className="inspector-move"><span>Ubicación</span><select value={selection.area === 'series' ? 'series' : selection.branchId} onChange={(event) => moveSelected(event.target.value)}><option value="series">Línea principal</option>{branches.map((branch, index) => <option value={branch.id} key={branch.id}>Rama {index + 1}</option>)}</select></label><button className="inspector-delete" onClick={removeSelected}><Trash2 size={13} />Eliminar</button></section>}
       </section>
 
-      <aside className="wired-side-panel"><section className="wired-source-card"><div><BatteryCharging size={17} /><span><strong>Fuente DC</strong><small>Voltaje aplicado</small></span><output>{voltage} V</output></div><input type="range" min="1" max="48" value={voltage} aria-label="Voltaje de la fuente" style={{ '--range': `${((voltage - 1) / 47) * 100}%` } as CSSProperties} onChange={(event) => setVoltage(Number(event.target.value))} /></section><section className="wired-results-card"><div className={`wired-status ${results.isComplete ? 'ready' : ''}`}><i />{results.isComplete ? 'Circuito cerrado' : 'Circuito incompleto o abierto'}</div><span>RESISTENCIA EQUIVALENTE</span><strong>{results.isComplete ? format(results.equivalentResistance) : '—'} <em>{results.isComplete ? 'Ω' : ''}</em></strong><div className="wired-result-row"><Activity size={14} /><span>Corriente total</span><b>{format(results.totalCurrent, 3)} A</b></div><div className="wired-result-row"><Zap size={14} /><span>Potencia total</span><b>{format(results.totalPower)} W</b></div><div className="wired-result-row"><CirclePower size={14} /><span>Voltaje en paralelo</span><b>{format(results.parallelVoltage)} V</b></div></section></aside>
+      <aside className="wired-side-panel"><section className="wired-source-card"><div><BatteryCharging size={17} /><span><strong>Fuente DC</strong><small>Voltaje aplicado</small></span><output>{voltage} V</output></div><input type="range" min="1" max="48" value={voltage} aria-label="Voltaje de la fuente" style={{ '--range': `${((voltage - 1) / 47) * 100}%` } as CSSProperties} onChange={(event) => setVoltage(Number(event.target.value))} /></section><ResultPanel
+        className="wired-results-card"
+        title="Resultados del circuito"
+        status={results.isComplete ? 'Circuito cerrado' : 'Circuito abierto'}
+        statusTone={results.isComplete ? 'ready' : 'warning'}
+        primaryLabel="Resistencia equivalente"
+        primaryValue={<>{results.isComplete ? format(results.equivalentResistance) : '—'} {results.isComplete && <small>Ω</small>}</>}
+        primaryDetail={results.isComplete ? 'Equivalente visto por la fuente' : 'Completa una trayectoria para calcular'}
+        metrics={[
+          { label: 'Corriente total', value: `${format(results.totalCurrent, 3)} A` },
+          { label: 'Potencia total', value: `${format(results.totalPower)} W` },
+          { label: 'Voltaje en paralelo', value: `${format(results.parallelVoltage)} V`, wide: true },
+        ]}
+      /></aside>
     </div>
   </div>
 }

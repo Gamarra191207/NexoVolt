@@ -1,8 +1,12 @@
 import { useMemo, useState, type CSSProperties } from 'react'
-import { Activity, BatteryCharging, Gauge, Shield } from 'lucide-react'
+import { Activity, BatteryCharging, Shield } from 'lucide-react'
+import ResultPanel from './ResultPanel'
 import './ohm-law-explorer.css'
 
 const format = (value: number, decimals = 1) => Number(value.toFixed(decimals)).toString()
+const MAX_CURRENT = 24 / 4
+const CHARGE_MARKER_COUNT = 8
+const FLOW_DURATION_AT_ONE_AMP = 3
 
 function RelationControl({ label, value, unit, min, max, onChange }: {
   label: string
@@ -33,14 +37,16 @@ export default function OhmLawExplorer() {
   const [resistance, setResistance] = useState(12)
   const current = voltage / resistance
   const voltageLevel = (voltage / 24) * 100
-  const resistanceLevel = ((resistance - 4) / 36) * 100
-  const currentLevel = Math.min(100, (current / 6) * 100)
-  const flowDuration = Math.max(.55, Math.min(4, 2.7 / Math.max(current, .15)))
+  const resistanceLevel = (resistance / 40) * 100
+  const currentLevel = (current / MAX_CURRENT) * 100
+  // With the conductor geometry fixed, drift speed is proportional to I.
+  // Therefore one circuit lap takes a time inversely proportional to V / R.
+  const flowDuration = FLOW_DURATION_AT_ONE_AMP / current
 
   const tendency = useMemo(() => {
-    if (current > 2.5) return { word: 'Alto', className: 'high', dots: 9 }
-    if (current > .8) return { word: 'Medio', className: 'medium', dots: 6 }
-    return { word: 'Bajo', className: 'low', dots: 3 }
+    if (current > 2.5) return { word: 'Alto' }
+    if (current > .8) return { word: 'Medio' }
+    return { word: 'Bajo' }
   }, [current])
 
   const indicators = [
@@ -51,7 +57,7 @@ export default function OhmLawExplorer() {
 
   return <div className="ohm-explorer">
     <section className="relation-header">
-      <div><span className="section-kicker">RELACIÓN ENTRE VARIABLES</span><h3>Ley de Ohm</h3></div>
+      <div><h3>Ley de Ohm</h3></div>
       <div className="relation-legend"><span><i className="same" />Cambian en el mismo sentido</span><span><i className="opposite" />Cambian en sentido contrario</span></div>
     </section>
 
@@ -64,25 +70,32 @@ export default function OhmLawExplorer() {
       <div className="variable-gauges">
         {indicators.map((indicator, index) => <div className={`variable-gauge ${indicator.tone}`} key={indicator.symbol}>
           <div className="gauge-heading"><span>{indicator.icon}</span><div><b>{indicator.symbol} · {indicator.name}</b><small>{indicator.caption}</small></div></div>
-          <div className="gauge-body"><div className="gauge-fill" style={{ height: `${Math.max(5, indicator.value)}%` }} /><div className="gauge-lines"><i /><i /><i /><i /></div></div>
+          <div className="gauge-body"><div className="gauge-fill" style={{ height: `${indicator.value}%` }} /><div className="gauge-lines"><i /><i /><i /><i /></div></div>
           <strong>{indicator.reading}</strong>
           {index < indicators.length - 1 && <span className={`variable-link ${index === 0 ? 'same' : 'opposite'}`} aria-hidden="true"><i>↕</i></span>}
         </div>)}
       </div>
 
-      <div className="relationship-summary">
-        <div className="same"><span>V</span><i>↑</i><span>I</span><strong>Mismo sentido</strong><small>Si aumenta el empuje, aumenta el flujo.</small></div>
-        <div className="opposite"><span>R</span><i>↑</i><span>I</span><i>↓</i><strong>Sentido contrario</strong><small>Si aumenta la oposición, disminuye el flujo.</small></div>
-      </div>
+      <ResultPanel
+        className="ohm-result-summary"
+        title="Resultado de la relación"
+        status={`Flujo ${tendency.word.toLowerCase()}`}
+        primaryLabel="Corriente calculada"
+        primaryValue={<>{format(current, 2)} <small>A</small></>}
+        metrics={[
+          { label: 'Voltaje', value: `${voltage} V` },
+          { label: 'Resistencia', value: `${resistance} Ω` },
+          { label: 'Potencia', value: `${format(voltage * current, 2)} W`, wide: true },
+        ]}
+      />
     </section>
 
-    <section className="relation-circuit">
-      <div className="relation-circuit-heading"><div><Gauge size={16} /><span><b>Flujo en el circuito</b><small>Las partículas se mueven más rápido cuando la corriente aumenta.</small></span></div><span className={`flow-state ${tendency.className}`}><i />Flujo {tendency.word}</span></div>
+    <section className="relation-circuit" style={{ '--component-flow-period': `${flowDuration}s` } as CSSProperties}>
       <svg viewBox="0 0 760 230" role="img" aria-label={`Circuito con voltaje de ${voltage} voltios, resistencia de ${resistance} ohmios y flujo ${tendency.word.toLowerCase()}`}>
         <path className="relation-wire" d="M102 58H650V174H102V58" />
-        <g className="relation-battery" transform="translate(76 88)"><rect width="52" height="56" rx="11"/><path d="M16 19h20M26 10v18M17 40h18"/><text x="26" y="75" textAnchor="middle">{voltage} V</text></g>
-        <g className="relation-resistor" transform="translate(322 35)"><rect width="142" height="46" rx="11"/><path d="M15 23h15l9-13 16 26 16-26 16 26 16-26 10 13h14"/><text x="71" y="-9" textAnchor="middle">{resistance} Ω</text></g>
-        <g className="relation-charge-flow">{Array.from({ length: tendency.dots }, (_, index) => <circle key={index} r="6"><animateMotion dur={`${flowDuration}s`} repeatCount="indefinite" begin={`${index * -.34}s`} path="M135 174H650V58H135" /></circle>)}</g>
+        <g className="relation-battery circuit-style-component" transform="translate(102 116)"><rect x="-32" y="-32" width="64" height="64" rx="8"/><circle className="source-terminal" cx="0" cy="-32" r="2.5"/><circle className="source-terminal" cx="0" cy="32" r="2.5"/><path className="relation-source-positive" d="M-10-10H10M0-20V0"/><path className="relation-source-negative" d="M-10 16H10"/><text y="49" textAnchor="middle">{voltage} V</text></g>
+        <g className="relation-resistor circuit-style-component" transform="translate(393 58)"><rect x="-32" y="-32" width="64" height="64" rx="8"/><g className="svg-resistor horizontal is-energized"><path className="resistor-symbol" d="M-28 0h7l6-9 10 18L5-9l10 18 6-9h7"/><circle className="resistor-terminal" cx="-28" cy="0" r="2.5"/><circle className="resistor-terminal" cx="28" cy="0" r="2.5"/></g><text y="-41" textAnchor="middle">{resistance} Ω</text></g>
+        <g className="relation-charge-flow">{Array.from({ length: CHARGE_MARKER_COUNT }, (_, index) => <circle key={index} r="6"><animateMotion dur={`${flowDuration}s`} repeatCount="indefinite" begin={index === 0 ? '0s' : `-${((flowDuration * index) / CHARGE_MARKER_COUNT).toFixed(3)}s`} calcMode="linear" path="M135 58H650V174H135" /></circle>)}</g>
         <g className="relation-current-label"><path d="M164 34h76"/><path d="m230 26 11 8-11 8"/><text x="187" y="21">Corriente {tendency.word.toLowerCase()}</text></g>
       </svg>
     </section>
