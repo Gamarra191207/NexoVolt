@@ -1,0 +1,49 @@
+.engine-status {
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .015em;
+  box-shadow: 0 5px 16px rgba(20, 34, 29, .04);
+}
+
+.engine-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5aa88d;
+  box-shadow: 0 0 0 4px rgba(90, 168, 141, .12);
+}
+
+.engine-status.tauri {
+  border-color: color-mix(in srgb, var(--green) 30%, var(--border));
+  color: var(--green);
+}
+
+.engine-status.browser i {
+  background: #d79b4d;
+  box-shadow: 0 0 0 4px rgba(215, 155, 77, .12);
+}
+
+.engine-status.loading { color: var(--muted); }
+.engine-status.error { color: #b45c59; border-color: #e7c4c2; }
+.engine-spinner { animation: engine-spin .9s linear infinite; }
+
+@keyframes engine-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 760px) {
+  .engine-status span { display: none; }
+  .engine-status { width: 34px; justify-content: center; padding: 0; }
+  .engine-status i { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engine-spinner { animation: none; }
+}

@@ -6,3 +6,52 @@
 @media(max-width:520px){.wired-templates{padding:9px}.wired-template-list{display:flex;overflow-x:auto;padding-bottom:3px}.wired-template-list>button{min-width:145px}.wired-toolbar>div{width:100%;display:grid;grid-template-columns:auto 1fr;align-items:center}.wired-toolbar>div select{min-width:0}.toolbar-divider{display:none}.wired-toolbar>button{flex:1;justify-content:center}.wired-toolbar .toolbar-new{flex:0;width:32px;font-size:0}.wired-canvas{height:330px}.canvas-heading small,.canvas-legend{display:none}.component-inspector{grid-template-columns:36px 1fr auto;gap:7px}.inspector-value,.inspector-switch{grid-column:3}.inspector-move{grid-column:2}.inspector-delete{grid-column:3}.wired-side-panel{display:flex}.wired-reading-guide{grid-column:auto}}
 .wired-toolbar>button:disabled{opacity:.35;cursor:not-allowed}
 .blank-circuit-gap circle,.empty-branch-gap circle{fill:#fff;stroke:#9da7b4;stroke-width:2}.blank-circuit-gap text,.empty-branch-gap text{fill:#98a2af;font:600 9px Segoe UI,sans-serif}.empty-branch-gap text{writing-mode:vertical-rl;letter-spacing:.3px}
+/* Laboratory component language: technical symbols with state-aware color. */
+.wired-canvas .schematic-component>rect{fill:#0b241d;stroke:#34785f;stroke-width:1.5;transition:fill .16s,stroke .16s,filter .16s}
+.wired-canvas .schematic-component.resistor>rect{fill:#0d2a22;stroke:#3b9370}
+.wired-canvas .schematic-component.lamp>rect{fill:#10251f;stroke:#537b6b}
+.wired-canvas .schematic-component.lamp.energized>rect{fill:#302b18;stroke:#d0a94e}
+.wired-canvas .schematic-component.switch>rect{fill:#0d2a22;stroke:#3b9370}
+.wired-canvas .schematic-component.switch.deenergized>rect{fill:#15251f;stroke:#657b72}
+.wired-canvas .schematic-component:hover>rect,.wired-canvas .schematic-component.selected>rect{fill:#11372b;stroke:var(--sim-green-bright,#56dfa6);stroke-width:2.5;filter:drop-shadow(0 0 6px #56dfa655)}
+.wired-canvas .schematic-component.lamp.energized:hover>rect,.wired-canvas .schematic-component.lamp.energized.selected>rect{fill:#3a3219;stroke:#f0c85d}
+.wired-canvas .schematic-component text{fill:#a9c9bd;font-weight:650;paint-order:stroke;stroke:#071712;stroke-width:2px}
+.resistor-symbol{fill:none;stroke:var(--sim-green-bright,#56dfa6);stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round}
+.resistor-terminal{fill:#c9eddf;stroke:var(--sim-green,#43c58d);stroke-width:1.2}
+.lamp-glow{fill:#ffd768;stroke:none;opacity:0;filter:drop-shadow(0 0 7px #ffd768)}
+.lamp-bulb{fill:#142a23;stroke:#779688;stroke-width:2}
+.lamp-filament{fill:none;stroke:#829d92;stroke-width:1.7;stroke-linecap:round}
+.lamp-rays{fill:none;stroke:#eac45e;stroke-width:1.4;stroke-linecap:round;opacity:0}
+.svg-lamp.is-on .lamp-glow{opacity:.22}
+.svg-lamp.is-on .lamp-bulb{fill:#f5cf63;stroke:#ffe7a0}
+.svg-lamp.is-on .lamp-filament{stroke:#5e4c18;stroke-width:2}
+.svg-lamp.is-on .lamp-rays{opacity:.95}
+.switch-contact{fill:#c9eddf;stroke:var(--sim-green,#43c58d);stroke-width:1.8}
+.switch-lever{fill:none;stroke:#82968e;stroke-width:3;stroke-linecap:round}
+.svg-switch.closed .switch-lever{stroke:var(--sim-green-bright,#56dfa6)}
+.svg-switch.open .switch-contact{fill:#9baba5;stroke:#70837b}
+.wired-toolbar .component-tool{border-color:#b8d8cc!important;background:#edf7f3!important;color:#246f55!important}
+.wired-toolbar .component-tool:hover{border-color:#52ad88!important;background:#e0f3eb!important;color:#175f47!important}
+.wired-toolbar .lamp-tool svg{color:#b88a20}
+.wired-toolbar .switch-tool svg{color:#2e8b68}
+.toolbar-resistor{color:#2e8b68}
+.inspector-icon{border-color:#9fcdbb;background:#eaf6f1;color:#247455}
+.inspector-icon.lamp{border-color:#dbc47c;background:#fff8dd;color:#9e7416}
+.inspector-icon.switch{border-color:#9fcdbb;background:#eaf6f1;color:#247455}
+.inspector-icon svg{display:block;width:32px;height:28px;overflow:visible}
+.app-shell[data-theme="dark"] .inspector-icon{border-color:#386c59;background:#102a21}
+.app-shell[data-theme="dark"] .inspector-icon.lamp{border-color:#77652e;background:#2d2919}
+.wire-template-icon b.resistor{border-color:#3b9370;background:#dff3eb}
+.wire-template-icon b.lamp{border-color:#c9a13d;background:#fff0ad}
+.wire-template-icon b.switch{border-top-color:#3b9370}
+.svg-resistor.is-energized .resistor-symbol{stroke-dasharray:6 4;animation:component-state-flow var(--component-flow-period,1.2s) linear infinite;filter:drop-shadow(0 0 2px #56dfa688)}
+.svg-resistor.is-idle .resistor-symbol{stroke:#66847a;filter:none}
+.svg-resistor.is-idle .resistor-terminal{fill:#82968e;stroke:#60776e}
+.svg-lamp.is-on .lamp-glow{animation:lamp-state-live var(--component-flow-period,1.2s) ease-in-out infinite}
+.svg-switch.is-energized .switch-contact{animation:switch-state-live var(--component-flow-period,1.2s) ease-in-out infinite}
+.svg-switch.open .switch-lever{animation:none;filter:none}
+@keyframes component-state-flow{to{stroke-dashoffset:-20}}
+@keyframes lamp-state-live{0%,100%{opacity:.1;transform:scale(.92)}50%{opacity:var(--component-glow,.3);transform:scale(1.04)}}
+@keyframes switch-state-live{0%,100%{filter:drop-shadow(0 0 1px #56dfa666)}50%{filter:drop-shadow(0 0 5px #56dfa6cc)}}
+@media(prefers-reduced-motion:reduce){.svg-resistor.is-energized .resistor-symbol,.svg-lamp.is-on .lamp-glow,.svg-switch.is-energized .switch-contact{animation:none}.svg-lamp.is-on .lamp-glow{opacity:var(--component-glow,.3)}}
+.wired-canvas .schematic-battery>rect{fill:#102923!important;stroke:#438e70!important;stroke-width:1.5;filter:drop-shadow(0 4px 5px #06130f66)}.schematic-battery .source-terminal{fill:#c9eddf;stroke:var(--sim-green,#43c58d);stroke-width:1.2}.schematic-battery .source-positive{fill:none;stroke:#62dfa8;stroke-width:2.8;stroke-linecap:round}.schematic-battery .source-negative{fill:none;stroke:#91b5a7;stroke-width:2.8;stroke-linecap:round}.wired-canvas .schematic-battery text{fill:#b9d8cd;paint-order:stroke;stroke:#071712;stroke-width:2px}.wired-canvas .schematic-battery .source-voltage{fill:#82bba5;font-weight:700}

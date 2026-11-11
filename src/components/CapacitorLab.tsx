@@ -1,12 +1,12 @@
 import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
-import { ArrowLeft, BookOpen, Layers3, RotateCcw, Zap } from 'lucide-react'
+import { RotateCcw, Zap } from 'lucide-react'
 import { VACUUM_PERMITTIVITY } from '../physics/capacitors'
 import NumericInput from './NumericInput'
+import ResultPanel from './ResultPanel'
 import './capacitor-lab.css'
 import './capacitor-lab-v2.css'
 import './capacitor-lab-v3.css'
 
-type View = 'plates' | 'formulas'
 type WorldPoint = { x: number; y: number; z: number }
 type ProjectedPoint = { x: number; y: number; depth: number }
 type SceneFace = { id: string; points: WorldPoint[]; fill: string; opacity?: number }
@@ -95,7 +95,6 @@ function formatEnergy(joules: number) {
 }
 
 export default function CapacitorLab() {
-  const [view, setView] = useState<View>('plates')
   const [areaCm2, setAreaCm2] = useState(100)
   const [separationMm, setSeparationMm] = useState(2)
   const [sourceVoltage, setSourceVoltage] = useState(120)
@@ -151,14 +150,22 @@ export default function CapacitorLab() {
   const dimensionStart = { x: -separation / 2, y: dimensionY, z: 0 }
   const dimensionEnd = { x: separation / 2, y: dimensionY, z: 0 }
   const sceneFaces = [...leftPlateFaces, ...rightPlateFaces, ...dielectricFaces]
-  const sceneWorldPoints = [
-    ...sceneFaces.flatMap((face) => face.points),
-    ...worldFieldLines.flatMap((line) => [line.from, line.to]),
-    dimensionStart,
-    dimensionEnd,
-  ]
-  const rotatedScenePoints = sceneWorldPoints.map((point) => rotateScenePoint(point, cameraRotation))
-  const sceneBounds = rotatedScenePoints.reduce((bounds, point) => ({
+  // Keep the camera framing independent from the live geometry. If the bounds
+  // are calculated from the current plate size, increasing the area zooms the
+  // whole scene out and makes an unchanged separation look smaller.
+  const maximumPlateSide = 2
+  const maximumSeparation = 2.1
+  const frameHalfWidth = maximumSeparation / 2 + plateThickness
+  const frameTop = maximumPlateSide / 2
+  const frameBottom = -maximumPlateSide / 2 - 0.24
+  const frameHalfDepth = maximumPlateSide / 2
+  const sceneFramePoints: WorldPoint[] = [frameBottom, frameTop].flatMap((y) =>
+    [-frameHalfWidth, frameHalfWidth].flatMap((x) =>
+      [-frameHalfDepth, frameHalfDepth].map((z) => ({ x, y, z })),
+    ),
+  )
+  const rotatedFramePoints = sceneFramePoints.map((point) => rotateScenePoint(point, cameraRotation))
+  const sceneBounds = rotatedFramePoints.reduce((bounds, point) => ({
     minX: Math.min(bounds.minX, point.x), maxX: Math.max(bounds.maxX, point.x),
     minY: Math.min(bounds.minY, point.y), maxY: Math.max(bounds.maxY, point.y),
   }), { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity })
@@ -180,6 +187,14 @@ export default function CapacitorLab() {
   const projectedLeftCenter = projectPoint(leftPlateCenter)
   const projectedRightCenter = projectPoint(rightPlateCenter)
   const projectedDielectricCenter = projectPoint({ x: 0, y: 0, z: 0 })
+  const fieldMagnitude = Math.abs(plateResults.field)
+  const fieldVisualLevel = Math.max(0, Math.min(1, Math.log10(Math.max(fieldMagnitude, 1e3) / 1e3) / 3))
+  const fieldAnimationStyle = {
+    '--field-flow-period': `${(2.6 - fieldVisualLevel * 2).toFixed(2)}s`,
+    '--field-opacity': (0.4 + fieldVisualLevel * 0.5).toFixed(2),
+    '--field-stroke': (1.1 + fieldVisualLevel * 0.8).toFixed(2),
+    '--charge-pulse-period': `${(2.8 - fieldVisualLevel * 1.8).toFixed(2)}s`,
+  } as CSSProperties
 
   function resetCamera() {
     setCameraRotation({ x: -18, y: 28, z: 0 })
@@ -206,22 +221,13 @@ export default function CapacitorLab() {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
   }
 
-  function openFormulaRepository() {
-    setView('formulas')
-  }
-
   return <div className="capacitor-lab">
     <div className="capacitor-toolbar">
-      {view === 'formulas' ? <button className="formula-back-button" onClick={() => setView('plates')}><ArrowLeft size={14} />Volver al simulador</button> : <>
-        <div className="capacitor-section-label"><Layers3 size={15} /><div><strong>Placas y dieléctricos</strong><span>Simulación 3D y energía almacenada</span></div></div>
-        <div className="capacitor-toolbar-actions"><button className="formula-library-button" onClick={openFormulaRepository}><BookOpen size={13} />Fórmulas</button><span className="capacitor-assumptions">MODELO ELECTROSTÁTICO IDEAL</span><button className="reset-button" onClick={reset}><RotateCcw size={13} />Reiniciar</button></div>
-      </>}
+      <button className="reset-button" onClick={reset}><RotateCcw size={13} />Reiniciar</button>
     </div>
-
-    {view === 'formulas' ? <FormulaRepository /> : <>
     <div className="plate-lab-layout">
       <div className="plate-main-column">
-        <div className={`plate-visual capacitor-3d-visual ${dielectricInserted ? 'has-dielectric' : ''}`}>
+        <div className={`plate-visual capacitor-3d-visual ${dielectricInserted ? 'has-dielectric' : ''} ${batteryConnected ? 'battery-connected' : 'battery-isolated'}`} style={fieldAnimationStyle}>
           <svg
             className="capacitor-3d-scene"
             viewBox="0 0 760 400"
@@ -246,9 +252,7 @@ export default function CapacitorLab() {
             <line x1={projectedDimensionStart.x} y1={projectedDimensionStart.y} x2={projectedDimensionEnd.x} y2={projectedDimensionEnd.y} className="dimension-line" markerStart="url(#dimension-arrow)" markerEnd="url(#dimension-arrow)" />
             <rect x={projectedDimensionCenter.x - 45} y={projectedDimensionCenter.y + 11} width="90" height="21" rx="10.5" className="dimension-label-bg" />
             <text x={projectedDimensionCenter.x} y={projectedDimensionCenter.y + 25} className="dimension-label" textAnchor="middle">{separationMm.toFixed(1)} mm</text>
-            <text x="380" y="27" className="scene-view-label" textAnchor="middle">MODELO 3D</text>
           </svg>
-          <div className="plate-caption"><span><i />Vista 3D · placas cuadradas</span><span>Área · {areaCm2} cm²</span></div>
         </div>
         <div className="camera-navigation-panel">
           <div className="camera-navigation-heading"><div><strong>Vista 3D</strong></div><button onClick={resetCamera}><RotateCcw size={12} />Restablecer</button></div>
@@ -260,11 +264,11 @@ export default function CapacitorLab() {
           </div>
         </div>
         <div className="plate-control-panel">
-          <div className="plate-control-heading"><div><strong>Control del sistema</strong><span>La escena 3D refleja cada ajuste en tiempo real</span></div><span className="control-live-badge"><i />ACTIVO</span></div>
+          <div className="plate-control-heading"><strong>Control del sistema</strong></div>
           <div className="plate-control-grid">
             <label className="capacitor-control"><span>Área de cada placa</span><div className="capacitor-control-input"><NumericInput min={20} max={500} step={1} value={areaCm2} onValueChange={setAreaCm2} /><em>cm²</em></div><input className="capacitor-range" aria-label="Área de cada placa" type="range" min="20" max="500" step="1" value={areaCm2} style={{ '--range': `${((areaCm2 - 20) / 480) * 100}%` } as CSSProperties} onChange={(event) => setAreaCm2(Number(event.target.value))} /></label>
             <label className="capacitor-control"><span>Separación entre placas</span><div className="capacitor-control-input"><NumericInput min={0.5} max={10} step={0.1} value={separationMm} onValueChange={setSeparationMm} /><em>mm</em></div><input className="capacitor-range" aria-label="Separación entre placas" type="range" min="0.5" max="10" step="0.1" value={separationMm} style={{ '--range': `${((separationMm - 0.5) / 9.5) * 100}%` } as CSSProperties} onChange={(event) => setSeparationMm(Number(event.target.value))} /></label>
-            <label className="capacitor-control"><span>Voltaje de la fuente</span><div className="capacitor-control-input"><NumericInput min={10} max={500} step={1} value={sourceVoltage} onValueChange={setSourceVoltage} /><em>V</em></div><input className="capacitor-range" aria-label="Voltaje de la fuente" type="range" min="10" max="500" step="1" value={sourceVoltage} style={{ '--range': `${((sourceVoltage - 10) / 490) * 100}%` } as CSSProperties} onChange={(event) => setSourceVoltage(Number(event.target.value))} /></label>
+            <label className={`capacitor-control ${!batteryConnected ? 'is-disabled' : ''}`}><span>Voltaje de la fuente</span><div className="capacitor-control-input"><NumericInput min={10} max={500} step={1} value={sourceVoltage} disabled={!batteryConnected} onValueChange={setSourceVoltage} /><em>V</em></div><input className="capacitor-range" aria-label="Voltaje de la fuente" type="range" min="10" max="500" step="1" value={sourceVoltage} disabled={!batteryConnected} style={{ '--range': `${((sourceVoltage - 10) / 490) * 100}%` } as CSSProperties} onChange={(event) => setSourceVoltage(Number(event.target.value))} /></label>
             <label className={`capacitor-control ${!dielectricInserted ? 'is-disabled' : ''}`}><span>Permitividad relativa</span><div className="capacitor-control-input"><NumericInput min={1} max={10} step={0.1} value={relativePermittivity} disabled={!dielectricInserted} onValueChange={setRelativePermittivity} /><em>εr</em></div><input className="capacitor-range" aria-label="Permitividad relativa" type="range" min="1" max="10" step="0.1" value={relativePermittivity} disabled={!dielectricInserted} style={{ '--range': `${((relativePermittivity - 1) / 9) * 100}%` } as CSSProperties} onChange={(event) => setRelativePermittivity(Number(event.target.value))} /></label>
           </div>
         </div>
@@ -275,51 +279,22 @@ export default function CapacitorLab() {
           <div className="condition-toggle-row medium-condition-row"><div><strong>Medio entre placas</strong><small>{dielectricInserted ? 'Material dieléctrico' : 'Vacío, sin material'}</small></div><div className="medium-mode-picker" role="radiogroup" aria-label="Medio entre placas"><button role="radio" aria-checked={!dielectricInserted} className={!dielectricInserted ? 'selected' : ''} onClick={() => setDielectricInserted(false)}>Vacío</button><button role="radio" aria-checked={dielectricInserted} className={dielectricInserted ? 'selected' : ''} onClick={() => setDielectricInserted(true)}>Dieléctrico</button></div></div>
           <div className="condition-toggle-row"><div><strong>Batería conectada</strong><small>{batteryConnected ? 'El voltaje se mantiene constante' : 'La carga queda aislada'}</small></div><button className={`switch ${batteryConnected ? 'on' : ''}`} role="switch" aria-checked={batteryConnected} aria-label="Conectar batería" onClick={() => { if (batteryConnected) setIsolatedCharge(plateResults.charge); setBatteryConnected(!batteryConnected) }}><i /></button></div>
         </section>
-        <section className="plate-results-card">
-          <div className="plate-section-title"><span className="live-dot" /><strong>Magnitudes calculadas</strong><small>EN VIVO</small></div>
-          <div className="plate-primary-result"><span>Capacitancia</span><strong>{formatCapacitance(plateResults.capacitance)}</strong><small>Capacitor de placas paralelas</small></div>
-          <div className="plate-metrics-grid">
-            <div><span>Carga eléctrica</span><strong>{formatCharge(plateResults.charge)}</strong><small>En las placas</small></div>
-            <div><span>Diferencia de potencial</span><strong>{formatValue(plateResults.voltage, 'V')}</strong><small>Entre placas</small></div>
-            <div><span>Campo eléctrico</span><strong>{formatValue(plateResults.field / 1e3, 'kV/m')}</strong><small>En el espacio interior</small></div>
-            <div><span>Energía almacenada</span><strong>{formatEnergy(plateResults.energy)}</strong><small>En el campo eléctrico</small></div>
-          </div>
-          <p className="plate-interpretation">{batteryConnected ? 'Con batería conectada, el voltaje permanece fijo; al insertar el dieléctrico aumentan la capacitancia, la carga y la energía.' : 'Con la batería desconectada, la carga permanece fija; el dieléctrico reduce el voltaje, el campo y la energía almacenada.'}</p>
-        </section>
+        <ResultPanel
+          className="plate-results-card"
+          title="Magnitudes calculadas"
+          status={batteryConnected ? 'Fuente conectada' : 'Carga aislada'}
+          primaryLabel="Capacitancia"
+          primaryValue={formatCapacitance(plateResults.capacitance)}
+          primaryDetail="Capacitor de placas paralelas"
+          metrics={[
+            { label: 'Carga eléctrica', value: formatCharge(plateResults.charge), detail: 'En las placas' },
+            { label: 'Diferencia de potencial', value: formatValue(plateResults.voltage, 'V'), detail: 'Entre placas' },
+            { label: 'Campo eléctrico', value: formatValue(plateResults.field / 1e3, 'kV/m'), detail: 'Espacio interior' },
+            { label: 'Energía almacenada', value: formatEnergy(plateResults.energy), detail: 'En el campo' },
+          ]}
+        />
         <div className="dielectric-detail"><strong>{dielectricInserted ? 'Respuesta del material' : 'Medio de referencia'}</strong><span>Susceptibilidad eléctrica · {plateResults.susceptibility.toFixed(1)}</span><span>Polarización · {formatValue(plateResults.polarization * 1e6, 'µC/m²')}</span><span>Densidad de energía · {formatValue(plateResults.energyDensity, 'J/m³')}</span></div>
       </div>
     </div>
-    </>}
   </div>
-}
-
-function FormulaRepository() {
-  const groups = [
-    {
-      title: 'Capacitor de placas paralelas',
-      subtitle: 'Geometría y magnitudes eléctricas',
-      formulas: [
-        ['Capacitancia', 'C = ε A / d', 'A es el área de una placa y d la separación.'],
-        ['Carga y diferencia de potencial', 'Q = C ΔV', 'Relación constitutiva para un capacitor ideal.'],
-        ['Campo entre placas', 'E ≈ ΔV / d', 'Aproximación válida lejos de los bordes.'],
-      ],
-    },
-    {
-      title: 'Material dieléctrico y energía',
-      subtitle: 'Medio lineal, homogéneo e isotrópico',
-      formulas: [
-        ['Permitividad', 'ε = ε₀ εᵣ', 'ε₀ es la permitividad del vacío (8.854 × 10⁻¹² F/m) y εᵣ la relativa del material.'],
-        ['Susceptibilidad', 'χₑ = εᵣ − 1', 'Relación para un dieléctrico lineal.'],
-        ['Polarización', 'P = ε₀ χₑ E', 'Densidad de momento dipolar inducido.'],
-        ['Energía almacenada', 'U = ½ C (ΔV)² = Q²/(2C) = ½ Q ΔV', 'Las expresiones son equivalentes para un capacitor ideal.'],
-        ['Densidad de energía', 'u = ½ ε E²', 'Energía almacenada por unidad de volumen del campo.'],
-      ],
-    },
-  ] as const
-
-  return <section className="formula-repository" aria-labelledby="formula-repository-title">
-    <div className="formula-repository-heading"><div><span className="section-kicker">BIBLIOTECA DEL MÓDULO</span><h3 id="formula-repository-title">Repositorio de fórmulas</h3><p>Ecuaciones utilizadas para placas paralelas, dieléctricos y energía almacenada.</p></div><BookOpen size={22} /></div>
-    <div className="formula-repository-groups">{groups.map((group) => <article className="formula-group" key={group.title}><header><strong>{group.title}</strong><span>{group.subtitle}</span></header><div className="formula-group-items">{group.formulas.map(([title, equation, description]) => <div className="formula-entry" key={title}><strong>{title}</strong><div className="formula-equation">{equation}</div><p>{description}</p></div>)}</div></article>)}</div>
-    <div className="formula-assumption-note"><strong>Supuestos del modelo</strong><span>Capacitores ideales, dieléctrico lineal y uniforme, placas paralelas y efectos de borde despreciables.</span></div>
-  </section>
 }
